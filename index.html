@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>IMPEX — Product Pickup Request</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green:      #1A6B3C;
+    --green-light:#E8F5EE;
+    --green-mid:  #2E8B57;
+    --amber:      #D97706;
+    --amber-light:#FEF3C7;
+    --red:        #DC2626;
+    --red-light:  #FEE2E2;
+    --gray-50:    #F9FAFB;
+    --gray-100:   #F3F4F6;
+    --gray-200:   #E5E7EB;
+    --gray-400:   #9CA3AF;
+    --gray-600:   #4B5563;
+    --gray-800:   #1F2937;
+    --white:      #FFFFFF;
+    --radius:     12px;
+    --shadow:     0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--gray-50);
+    min-height: 100vh;
+    color: var(--gray-800);
+    padding-bottom: 40px;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--green);
+    color: white;
+    padding: 20px 20px 24px;
+    text-align: center;
+  }
+  .header-logo {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -.5px;
+    margin-bottom: 4px;
+  }
+  .header-sub {
+    font-size: 13px;
+    opacity: .75;
+    font-weight: 400;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin: 16px 16px 0;
+    padding: 20px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── Dealer info ── */
+  .dealer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .dealer-item label {
+    font-size: 11px;
+    color: var(--gray-400);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    display: block;
+    margin-bottom: 3px;
+  }
+  .dealer-item span {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-800);
+  }
+
+  /* ── Form ── */
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+
+  label.field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-600);
+    margin-bottom: 6px;
+  }
+  label.field-label span.req { color: var(--red); margin-left: 2px; }
+
+  select, input[type="number"] {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    color: var(--gray-800);
+    background: var(--white);
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    transition: border-color .15s;
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+  select:focus, input[type="number"]:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(26,107,60,.1);
+  }
+  select:disabled {
+    background-color: var(--gray-100);
+    color: var(--gray-400);
+    cursor: not-allowed;
+  }
+
+  /* ── Confirm summary ── */
+  .summary {
+    background: var(--green-light);
+    border: 1.5px solid #B7DFC7;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    padding: 4px 0;
+  }
+  .summary-row span:first-child { color: var(--gray-600); }
+  .summary-row span:last-child  { font-weight: 600; color: var(--gray-800); }
+
+  /* ── Button ── */
+  .btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-primary {
+    background: var(--green);
+    color: white;
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--green-mid); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--gray-100);
+    color: var(--gray-800);
+    margin-top: 10px;
+  }
+
+  /* ── States ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── Loading ── */
+  .loading-wrap {
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--gray-200);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-wrap p { color: var(--gray-600); font-size: 14px; }
+
+  /* ── Error ── */
+  .error-wrap {
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .error-icon { font-size: 48px; margin-bottom: 12px; }
+  .error-wrap h2 { font-size: 18px; margin-bottom: 8px; color: var(--red); }
+  .error-wrap p  { color: var(--gray-600); font-size: 14px; line-height: 1.5; }
+
+  /* ── Success ── */
+  .success-wrap {
+    text-align: center;
+    padding: 40px 20px 20px;
+  }
+  .success-icon {
+    width: 72px; height: 72px;
+    background: var(--green-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    margin: 0 auto 20px;
+  }
+  .success-wrap h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 6px;
+  }
+  .success-wrap p {
+    color: var(--gray-600);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .ticket-badge {
+    display: inline-block;
+    background: var(--green);
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 10px 24px;
+    border-radius: 8px;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+  .ticket-details {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: left;
+    margin-bottom: 20px;
+  }
+  .ticket-details .summary-row { font-size: 13px; }
+
+  /* ── Alert ── */
+  .alert {
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .alert.error { background: var(--red-light); color: var(--red); display: flex; gap: 8px; }
+  .alert.warn  { background: var(--amber-light); color: var(--amber); display: flex; gap: 8px; }
+
+  /* ── Steps indicator ── */
+  .steps {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px 0;
+    gap: 0;
+  }
+  .step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+  }
+  .step::after {
+    content: '';
+    position: absolute;
+    top: 13px; left: 50%; right: -50%;
+    height: 2px;
+    background: var(--gray-200);
+    z-index: 0;
+  }
+  .step:last-child::after { display: none; }
+  .step-dot {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    color: var(--gray-400);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 4px;
+    position: relative; z-index: 1;
+    transition: all .2s;
+  }
+  .step.active .step-dot  { background: var(--green); color: white; }
+  .step.done .step-dot    { background: var(--green-mid); color: white; }
+  .step.active::after,
+  .step.done::after       { background: var(--green-mid); }
+  .step-label {
+    font-size: 10px;
+    color: var(--gray-400);
+    font-weight: 500;
+  }
+  .step.active .step-label { color: var(--green); }
+  .step.done .step-label   { color: var(--green-mid); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">🏪 IMPEX Service</div>
+  <div class="header-sub">Product Pickup Request</div>
+</div>
+
+<!-- ── SCREEN: Loading ── -->
+<div id="screen-loading" class="screen active">
+  <div class="loading-wrap">
+    <div class="spinner"></div>
+    <p>Loading your dealer details…</p>
+  </div>
+</div>
+
+<!-- ── SCREEN: Error ── -->
+<div id="screen-error" class="screen">
+  <div class="card error-wrap">
+    <div class="error-icon">⚠️</div>
+    <h2>Something went wrong</h2>
+    <p id="error-msg">Unable to load dealer information. Please go back to WhatsApp and try again.</p>
+  </div>
+</div>
+
+<!-- ── SCREEN: Form ── -->
+<div id="screen-form" class="screen">
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step active" id="step1">
+      <div class="step-dot">1</div>
+      <div class="step-label">Product</div>
+    </div>
+    <div class="step" id="step2">
+      <div class="step-dot">2</div>
+      <div class="step-label">Confirm</div>
+    </div>
+  </div>
+
+  <!-- Dealer info -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">🏪 Dealer Info</div>
+    <div class="dealer-grid">
+      <div class="dealer-item">
+        <label>Dealer ID</label>
+        <span id="info-dealerid">—</span>
+      </div>
+      <div class="dealer-item">
+        <label>Name</label>
+        <span id="info-name">—</span>
+      </div>
+      <div class="dealer-item">
+        <label>Region</label>
+        <span id="info-region">—</span>
+      </div>
+      <div class="dealer-item">
+        <label>Service Center</label>
+        <span id="info-sc">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product selection -->
+  <div class="card" id="card-product">
+    <div class="card-title">📦 Select Product</div>
+    <div class="alert" id="form-error"></div>
+
+    <div class="field">
+      <label class="field-label">Category <span class="req">*</span></label>
+      <select id="sel-category">
+        <option value="">— Choose category —</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Model <span class="req">*</span></label>
+      <select id="sel-model" disabled>
+        <option value="">— Select category first —</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Quantity <span class="req">*</span></label>
+      <input type="number" id="inp-qty" min="1" max="99" value="1" placeholder="1">
+    </div>
+
+    <button class="btn btn-primary" id="btn-next" onclick="goConfirm()">
+      Review Request →
+    </button>
+  </div>
+</div>
+
+<!-- ── SCREEN: Confirm ── -->
+<div id="screen-confirm" class="screen">
+  <div class="steps">
+    <div class="step done" id="cstep1">
+      <div class="step-dot">✓</div>
+      <div class="step-label">Product</div>
+    </div>
+    <div class="step active" id="cstep2">
+      <div class="step-dot">2</div>
+      <div class="step-label">Confirm</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">✅ Confirm Your Request</div>
+
+    <div class="summary">
+      <div class="summary-row"><span>Dealer</span><span id="conf-dealer">—</span></div>
+      <div class="summary-row"><span>Category</span><span id="conf-category">—</span></div>
+      <div class="summary-row"><span>Model</span><span id="conf-model">—</span></div>
+      <div class="summary-row"><span>Quantity</span><span id="conf-qty">—</span></div>
+      <div class="summary-row"><span>Service Center</span><span id="conf-sc">—</span></div>
+    </div>
+
+    <div class="alert" id="confirm-error"></div>
+
+    <button class="btn btn-primary" id="btn-submit" onclick="submitPickup()">
+      <span id="btn-submit-text">Confirm & Create Ticket</span>
+    </button>
+    <button class="btn btn-secondary" onclick="goBack()">← Change Selection</button>
+  </div>
+</div>
+
+<!-- ── SCREEN: Success ── -->
+<div id="screen-success" class="screen">
+  <div class="card" style="margin-top:16px">
+    <div class="success-wrap">
+      <div class="success-icon">✅</div>
+      <h2>Pickup Request Created!</h2>
+      <p>Your request has been submitted successfully. Our team will contact you within 24 hours.</p>
+      <div class="ticket-badge" id="success-ticketno">—</div>
+
+      <div class="ticket-details">
+        <div class="summary-row"><span>Category</span><span id="suc-category">—</span></div>
+        <div class="summary-row"><span>Model</span><span id="suc-model">—</span></div>
+        <div class="summary-row"><span>Quantity</span><span id="suc-qty">—</span></div>
+        <div class="summary-row"><span>Date</span><span id="suc-date">—</span></div>
+        <div class="summary-row"><span>Service Center</span><span id="suc-sc">—</span></div>
+        <div class="summary-row"><span>Status</span><span style="color:var(--amber);font-weight:700">Pending</span></div>
+      </div>
+
+      <p style="font-size:12px;color:var(--gray-400)">You can check your ticket status anytime by messaging us on WhatsApp.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG — update these URLs ──────────────────────────────────────────
+const N8N_BASE         = 'https://n8n.srv1623198.hstgr.cloud/webhook';
+const CHECK_URL        = `${N8N_BASE}/impex-register-check`;
+const GET_MODELS_URL   = `${N8N_BASE}/impex-get-models`;
+const PICKUP_URL       = `${N8N_BASE}/impex-pickup`;
+
+// ── Embedded catalog (fallback if n8n models endpoint is slow) ──────────
+const CATALOG = {"2.0 Computer Speaker": ["BLUEBLAST", "BTS2011", "BTS2012", "BTS2013", "BTS2014", "BTS2015", "BTS2016", "BTS2020", "Gear2", "Molto", "SB402", "SB1401", "Gear3", "Thunder-T1Plus"], "2.1 Multimedia Speaker": ["BeatBeamSB6000", "HT2112", "HT2114", "MaestroJunior", "MicroR1", "MiniBangHT2116", "MiniRock", "MusicR", "OHT201R", "PianoBL", "SB6000", "Spinto-HT2104", "Spinto-HT2111"], "3.1 Home Theatre": ["HT3101"], "5.1 Home Theatre": ["Bang-HT-5106", "BEATB2", "BEATB3", "BLUEROCKHT5103", "BravoHT5107", "Bravo-HT5101", "FXMS-513", "HT5105", "HT5107BRAVO", "MAGNETO[HT5104]"], "Air Conditioner": ["SplitAC1.5ton", "WindowAC1.5ton", "SplitAC2ton", "WindowAC2ton"], "Air Cooler": ["FREEZO19", "FREEZO22", "FREEZO25", "FREEZO55", "Storm100"], "Air Fryer": ["AF4301", "AF4302", "AF4303", "AF4304", "AF4305", "AF4306", "AF4307", "AF4308", "AF4309", "AF4310", "AF4500"], "Bread Toaster": ["BD3702"], "Ceiling Lamp": ["GL36A", "Glare33", "Glare34", "Glare36"], "Chopper": ["FC3202", "FC3203", "FC3204B", "FC3205", "FC3206", "FC3222", "MS400", "MS900"], "Coffe Maker": ["CGR3001", "CGR3002", "CM1912", "CM1915", "ECM1916", "IECM2001", "IECM2002", "IECM2003", "TCM1002", "TCM1001"], "Cookware": ["ABP32HE", "ACS10HE", "ACS12M", "ACS8HE", "ADPC3E", "ADPC5E", "AFP28GE", "APF2620", "APTR35GE", "ASP26IE", "ASP32GE", "DFP2428W", "DGDNMP16M", "DSK5W", "DSK9W", "DTKP32", "KUK7", "KUK9", "NCB7101", "NCB7104", "NCB7108", "NCB7110", "NCS8G"], "Deep Fryer": ["IDF1003"], "Digital Video Broadcast": ["IXHDR101", "IXHDR102"], "Dish Washer": ["IDW13PS", "IDW15PS"], "Electric Cooker": ["EP3", "EP3C5", "EPC10", "EPC12", "EPC15", "EPC17", "EPC5", "EPC6", "EPC8"], "Electric Iron Box": ["Flexi", "IB191", "IB200", "IB201", "IB21", "IB211", "IBD501", "IBS401", "IBS402", "IBS403", "IBS404", "OIB601H", "SHOWY"], "Garment Steamer": ["GSM6010", "GSM6011", "GSM6012", "GSM6013", "GSM6014", "GSM6015", "GSM6016", "GSM6017"], "Electric Kettle": ["GST1501", "GST1802", "GST1803", "GST1805", "GST2002", "GST2001", "OKL1800", "OKL1803", "Steamer1803", "Steamer1804", "Steamer1805", "Steamer2002", "Steamer2003", "Steamer1501", "Steamer1801", "Steamer1802", "Steamer1808", "Steamer2001"], "ELECTRIC OVEN": ["OV2900", "OV2901", "OV2902", "OV2903", "OV2904", "OV2905", "OV2906", "OV2907"], "Emergency Light": ["CB2283", "CB2284", "CB2285", "CB2286", "Glare36", "IL678", "IL680", "IL683", "IL685", "IL686", "IL687", "IL688", "IL689", "IL692", "IL693", "IL694", "IL695", "IL696", "IL697", "IL698", "IL700", "IL701", "IL702", "IL703", "OL888+", "SHINE L", "TL600"], "FLASH LIGHT COMBO": ["CB2222", "CB2223", "CB2224", "CB2225", "CB2226", "CB2227", "CB2229", "CB2230", "CB2232", "CB2233", "CB5555", "OBLCB5506", "OFLCB5502", "OFLCB5505"], "GAS STOVE": ["IGS11", "IGS121", "IGS1212", "IGS1213", "IGS1214", "IGS1222", "IGS1233", "IGS124", "IGS125", "SPARCKLE2", "Specta2B", "Specta3B"], "Grinder": ["CG3401", "CG3403", "MG3801", "MG3807"], "HEATER": ["CH125", "HCB120", "HF90", "HQ80", "HQ81", "HR91", "HR92", "HR93", "OH13", "OHF13"], "Hot Plate": ["HP102", "HP100", "HP101", "HP201", "HP202"], "Induction Cooker": ["IC2601", "IC2602"], "INFRARED COOKTOP": ["IR2701", "IR2705", "IR2702", "IR2703", "IR2704"], "Insect Killer": ["IK4602", "IK4604", "IK4605", "IK4606", "IK4601", "IKB01"], "JUICER BLENDER": ["BL1002", "BL1004", "BL313", "BL319", "BL320", "BL322", "BL3500", "BL3501", "BL3502", "BL3503", "BL3507", "BL3508", "BL3509", "BL3511", "BL3533", "BL390", "BL315", "BL316", "BL318", "EZMXZJ500LB", "FP313", "GSM3309", "HB3201", "HB3206", "HB3207", "HM3201", "HM3301", "HM3302", "HM3304", "JB101", "JB414", "JB415", "JR13", "JR3504", "JR3505", "JR3506", "JR3510", "JR3511", "OB414", "OBL1002", "OBL5201", "OBL5202", "PBL01", "PBL02", "SB1500", "SM3303", "SM3305", "SM3306", "SM3307", "SM3308"], "Karaoke Wireless Microphone": ["KM1301", "KM1302"], "Kitchen Hob": ["BIHG5", "BIHS4", "BIHS5"], "KITCHEN SCALE": ["KS01"], "LED LAMP FLASH LIGHT COMBO": ["CB2287", "CB2288", "OBLCB5583"], "TV": ["LED TV 100 INCH", "LED TV 24 INCH", "LED TV 32 INCH", "LED TV 40 INCH", "LED TV 42 INCH", "LED TV 43 INCH", "LED TV 45 INCH", "LED TV 50 INCH", "LED TV 55 INCH", "LED TV 58 INCH", "LED TV 60 INCH", "LED TV 65 INCH", "LED TV 70 INCH", "LED TV 75 INCH", "LED TV 85 INCH"], "Massager Gun": ["PMG8"], "Micro Waveoven": ["MO8101", "MO8102", "MO8125DGB", "MO8142DGB"], "Pedestal and Table Fan": ["BF7510", "BF7512", "CF01", "CF02", "PF01", "PF7501", "PF7502", "PF7504", "TF7505", "TF7506", "TWISTER36", "TwisterPro", "WF7503"], "PERSONAL CARE": ["FS1401", "GK401", "GK402", "GK403", "HD1K2", "HD1K3", "HD1K4", "HD1K5", "HD1K6", "HD1K7", "HS301", "HS302", "HS303", "HS304", "HS305", "HS306", "HS307", "HSK101", "IHC3", "IHC5", "IHC7", "IHC8", "IHC9", "ISV2", "ISV3", "ISV4", "OGK301", "OGK302", "OGK402", "OHC01", "OHC03", "TIDY111", "TIDY221", "TIDY220"], "PERSONAL SCALE": ["PS01", "PS02", "PS03"], "Portable Speaker": ["GTS25B", "OTS35", "P10", "TS1104", "TS1105", "TS1106", "TS1107", "TS1108", "TS1109", "TS25B", "TS4001", "TS4002", "TS8001", "TS81"], "POWER SOCKET": ["PS7402", "PS7403", "PS7404", "PS7405", "PS7406"], "Power Station": ["IP12001"], "Pressure Cooker": ["5C3", "ADPC10E", "AIPC3", "AIPC5", "DAPC10", "DAPC11", "DAPC5", "DAPC7", "DAPC9", "DPC7G", "DPC9A", "ECO3", "EPC3E", "IFC235", "IPC501", "IPC503", "NORMA3", "NORMA5", "Prima3", "SPC5E", "TDPC5M", "TPC5"], "RADIO": ["MELODY", "MELODYPLUS", "MELODYPRO", "MELODYPRO RD 1201"], "Recharge Fan": ["Breeze C1", "Breeze D1", "Breeze D2", "Breeze D3", "Breeze D4", "Breeze D6", "Breeze D7", "Breeze D9", "Breeze D5", "Breeze D8", "HF01", "HF02"], "Refrigerator": ["IMBC100", "IMCF100", "IMCF150", "IMCF200", "IMRF140", "IMSC300W", "IMSC400B", "IRF138", "IRF200", "IRF220", "IRF250", "IRF290", "IRF335", "IRF420", "IRF46", "IRF470", "IRF520SS", "IRF550SBSS"], "RICE COOKER": ["MAGICPAN WS18", "RC2801", "RC2802", "RC2803", "RC2804", "RC2805"], "Roti Maker": ["BM3010"], "Sandwich Maker": ["BQ6110", "BQ6111", "SW3601", "SW3603", "SW3604", "SW3605", "SW3606", "SW3607"], "Stage Speaker": ["ST80A"], "Torch Light": ["BEAMQ2", "BEAMQ21", "G22B", "G23B", "Glister20", "Glister22", "Glister23", "HL2201", "HL2202", "HL2203", "HunterH1", "HunterZ0", "HunterZ1Plus", "HunterZ1", "HunterZ2", "HunterZ3", "HunterZ4", "HunterZ5", "HunterZ6", "HunterZ7", "HunterZ8", "KL200", "LeaderL2", "LeaderP2", "LEADER PLUSP 1", "LEADER PLUSP 2", "LuminC2", "LuminC3", "LuminX0", "LuminX10", "LuminX2", "LuminX21", "LuminX3", "LuminX4", "LuminX40", "LuminX6", "Lumin-A4", "LuminX1", "OFLCB5503", "Radian24", "UltraX20", "UltraX40"], "TROLLEY SPEAKER": ["OTS85", "ST80AN", "TS1103", "TS1104", "TS1110B", "TS25B", "TS25C", "TS4002", "TS81"], "Vaccum Flask": ["DSFK750", "VF4801", "VF4802", "VF4803", "VF4804", "VF4806"], "VACUUM CLEANER": ["OVC5301", "OVC5304", "VC4701", "VC4702", "VC4703", "VC4704", "VC4705", "VC4706", "VC4707", "VC4708", "VC4709", "VC4721T"], "Washing Mechine": ["WM0500TPW", "WM0600FW", "WM0700TMG", "WM0700TPW", "WM0750FS", "WM0800FS", "WM0800TMG", "WM1000FS", "WM1000TMG", "WM1000TPW", "WM1200TMG", "WM1400TWG", "WM4202", "WM4203", "WM4204", "WM4205", "WM4214", "WM4215", "WM4218"], "WATER DISPENSER": ["WD3901", "WD3902", "WD3903", "WD3904", "WD3905", "WD3906 BLW"], "Wireless Head phone": ["EP1601"]};
+
+// ── State ────────────────────────────────────────────────────────────────
+let dealer = {};
+let phone  = '';
+
+// ── Init ─────────────────────────────────────────────────────────────────
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  phone = (params.get('phone') || '').replace(/\D/g, '');
+
+  if (!phone) {
+    showError('No phone number provided. Please open this link from WhatsApp.');
+    return;
+  }
+
+  try {
+    const res  = await fetch(CHECK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'check', phone })
+    });
+    const data = await res.json();
+
+    if (!data.registered) {
+      showError('Dealer not found for this phone number. Please register first via WhatsApp.');
+      return;
+    }
+
+    dealer = {
+      dealerid:      data.dealerid      || '',
+      dealername:    data.dealername    || '',
+      region:        data.region        || '',
+      subregion:     data.subregion     || '',
+      locationgps:   data.locationgps   || '',
+      servicecenter: data.servicecenter || ''
+    };
+
+    // Populate dealer info panel
+    document.getElementById('info-dealerid').textContent = dealer.dealerid;
+    document.getElementById('info-name').textContent     = dealer.dealername;
+    document.getElementById('info-region').textContent   = dealer.region + (dealer.subregion ? ' · ' + dealer.subregion : '');
+    document.getElementById('info-sc').textContent       = dealer.servicecenter || 'N/A';
+
+    // Populate category dropdown from embedded catalog
+    const catSel = document.getElementById('sel-category');
+    Object.keys(CATALOG).sort().forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      catSel.appendChild(opt);
+    });
+
+    showScreen('screen-form');
+  } catch(e) {
+    showError('Could not connect to the server. Please check your connection and try again.');
+  }
+}
+
+// ── Category change → populate models ────────────────────────────────────
+document.getElementById('sel-category').addEventListener('change', function() {
+  const cat    = this.value;
+  const modSel = document.getElementById('sel-model');
+  modSel.innerHTML = '';
+
+  if (!cat) {
+    modSel.innerHTML = '<option value="">— Select category first —</option>';
+    modSel.disabled  = true;
+    return;
+  }
+
+  const models = CATALOG[cat] || [];
+  modSel.innerHTML = '<option value="">— Choose model —</option>';
+  models.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m;
+    modSel.appendChild(opt);
+  });
+  modSel.disabled = false;
+});
+
+// ── Go to confirm screen ──────────────────────────────────────────────────
+function goConfirm() {
+  const category = document.getElementById('sel-category').value;
+  const model    = document.getElementById('sel-model').value;
+  const qty      = parseInt(document.getElementById('inp-qty').value) || 0;
+  const errEl    = document.getElementById('form-error');
+
+  errEl.className = 'alert';
+  errEl.style.display = 'none';
+
+  if (!category) { showAlert(errEl, 'Please select a category.', 'error'); return; }
+  if (!model)    { showAlert(errEl, 'Please select a model.',    'error'); return; }
+  if (qty < 1)   { showAlert(errEl, 'Quantity must be at least 1.', 'error'); return; }
+
+  document.getElementById('conf-dealer').textContent   = dealer.dealername;
+  document.getElementById('conf-category').textContent = category;
+  document.getElementById('conf-model').textContent    = model;
+  document.getElementById('conf-qty').textContent      = qty + ' unit' + (qty > 1 ? 's' : '');
+  document.getElementById('conf-sc').textContent       = dealer.servicecenter || 'N/A';
+
+  showScreen('screen-confirm');
+}
+
+function goBack() { showScreen('screen-form'); }
+
+// ── Submit pickup ─────────────────────────────────────────────────────────
+async function submitPickup() {
+  const btn     = document.getElementById('btn-submit');
+  const btnText = document.getElementById('btn-submit-text');
+  const errEl   = document.getElementById('confirm-error');
+  errEl.className = 'alert'; errEl.style.display = 'none';
+
+  btn.disabled = true;
+  btnText.textContent = '⏳ Creating ticket…';
+
+  const category = document.getElementById('sel-category').value;
+  const model    = document.getElementById('sel-model').value;
+  const qty      = document.getElementById('inp-qty').value;
+
+  try {
+    const res  = await fetch(PICKUP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone:         phone,
+        dealerid:      dealer.dealerid,
+        dealername:    dealer.dealername,
+        product:       category + ' - ' + model,
+        quantity:      qty,
+        region:        dealer.region,
+        subregion:     dealer.subregion,
+        locationgps:   dealer.locationgps,
+        servicecenter: dealer.servicecenter
+      })
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      showAlert(errEl, data.error || 'Failed to create ticket. Please try again.', 'error');
+      btn.disabled = false;
+      btnText.textContent = 'Confirm & Create Ticket';
+      return;
+    }
+
+    // Show success
+    document.getElementById('success-ticketno').textContent = data.ticketno || '—';
+    document.getElementById('suc-category').textContent     = category;
+    document.getElementById('suc-model').textContent        = model;
+    document.getElementById('suc-qty').textContent          = qty + ' unit' + (qty > 1 ? 's' : '');
+    document.getElementById('suc-date').textContent         = data.date || '—';
+    document.getElementById('suc-sc').textContent           = data.servicecenter || dealer.servicecenter || '—';
+
+    showScreen('screen-success');
+  } catch(e) {
+    showAlert(errEl, 'Connection error. Please check your internet and try again.', 'error');
+    btn.disabled = false;
+    btnText.textContent = 'Confirm & Create Ticket';
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showError(msg) {
+  document.getElementById('error-msg').textContent = msg;
+  showScreen('screen-error');
+}
+
+function showAlert(el, msg, type) {
+  el.textContent  = msg;
+  el.className    = 'alert ' + type;
+  el.style.display = 'flex';
+}
+
+// ── Start ─────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
