@@ -400,10 +400,14 @@
         <h3 style="font-size:18px; color:var(--gray-800);">Product Catalog Manager</h3>
         <p style="font-size:13px; color:var(--gray-600); margin-top:4px;">Manage categories and models. Export to CSV to update Google Sheets.</p>
       </div>
-      <button class="btn btn-primary" onclick="exportCatalog(catalog)">📥 Export as CSV</button>
+      <button class="btn btn-primary" onclick="exportCatalog(catalogData)">📥 Export as CSV</button>
     </div>
 
-    <div class="catalog-layout">
+    <div class="catalog-layout" style="position:relative;">
+      <div id="catalog-loading" class="loading-overlay">
+        <div class="spinner dark" style="width:30px; height:30px;"></div>
+      </div>
+      <div id="catalog-error" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:var(--red); font-weight:bold; z-index:11;"></div>
       <!-- Categories -->
       <div class="catalog-sidebar">
         <div class="catalog-header">
@@ -413,9 +417,10 @@
           <!-- Rendered via JS -->
         </div>
         <div style="padding:16px; border-top:1px solid var(--gray-200);">
-          <div style="display:flex; gap:8px;">
+          <div style="display:flex; flex-direction:column; gap:8px;">
             <input type="text" id="new-cat-input" class="input-field" placeholder="New category name">
-            <button class="btn btn-primary" onclick="addCategory()">Add</button>
+            <input type="text" id="new-cat-model-input" class="input-field" placeholder="First model (optional)">
+            <button class="btn btn-primary" onclick="addCategory()">Add Category</button>
           </div>
         </div>
       </div>
@@ -447,14 +452,15 @@
 
 <script>
 // ── Config ─────────────────────────────────────────────────────────────────
-const N8N_BASE = 'https://n8n.srv1623198.hstgr.cloud/webhook';
+const N8N_BASE     = 'https://n8n.srv1623198.hstgr.cloud/webhook';
+const CATALOG_URL  = `${N8N_BASE}/impex-get-catalog`;
+const CAT_UPD_URL  = `${N8N_BASE}/impex-update-catalog`;
 const ADMIN_KEY_EXPECTED = 'IMPEX_ADMIN_2026';
+const ADMIN_KEY    = 'IMPEX_ADMIN_2026';
 
 let adminKey = sessionStorage.getItem('adminKey') || '';
 let allTickets = [];
-
-// Embedded Catalog (Fallback/Initial State)
-let catalog = {"2.0 Computer Speaker":["BLUEBLAST","BTS2011","BTS2012","BTS2013","BTS2014","BTS2015","BTS2016","BTS2020","Gear2","Molto","SB402","SB1401","Gear3","Thunder-T1Plus"],"2.1 Multimedia Speaker":["BeatBeamSB6000","HT2112","HT2114","MaestroJunior","MicroR1","MiniBangHT2116","MiniRock","MusicR","OHT201R","PianoBL","SB6000","Spinto-HT2104","Spinto-HT2111"],"3.1 Home Theatre":["HT3101"],"5.1 Home Theatre":["Bang-HT-5106","BEATB2","BEATB3","BLUEROCKHT5103","BravoHT5107","Bravo-HT5101","FXMS-513","HT5105","HT5107BRAVO","MAGNETO[HT5104]"],"Air Conditioner":["SplitAC1.5ton","WindowAC1.5ton","SplitAC2ton","WindowAC2ton"],"Air Cooler":["FREEZO19","FREEZO22","FREEZO25","FREEZO55","Storm100"],"Air Fryer":["AF4301","AF4302","AF4303","AF4304","AF4305","AF4306","AF4307","AF4308","AF4309","AF4310","AF4500"],"Bread Toaster":["BD3702"],"Ceiling Lamp":["GL36A","Glare33","Glare34","Glare36"],"Chopper":["FC3202","FC3203","FC3204B","FC3205","FC3206","FC3222","MS400","MS900"],"Coffe Maker":["CGR3001","CGR3002","CM1912","CM1915","ECM1916","IECM2001","IECM2002","IECM2003","TCM1002","TCM1001"],"Cookware":["ABP32HE","ACS10HE","ACS12M","ACS8HE","ADPC3E","ADPC5E","AFP28GE","APF2620","APTR35GE","ASP26IE","ASP32GE","DFP2428W","DGDNMP16M","DSK5W","DSK9W","DTKP32","KUK7","KUK9","NCB7101","NCB7104","NCB7108","NCB7110","NCS8G"],"Deep Fryer":["IDF1003"],"Digital Video Broadcast":["IXHDR101","IXHDR102"],"Dish Washer":["IDW13PS","IDW15PS"],"Electric Cooker":["EP3","EP3C5","EPC10","EPC12","EPC15","EPC17","EPC5","EPC6","EPC8"],"Electric Iron Box":["Flexi","IB191","IB200","IB201","IB21","IB211","IBD501","IBS401","IBS402","IBS403","IBS404","OIB601H","SHOWY"],"Garment Steamer":["GSM6010","GSM6011","GSM6012","GSM6013","GSM6014","GSM6015","GSM6016","GSM6017"],"Electric Kettle":["GST1501","GST1802","GST1803","GST1805","GST2002","GST2001","OKL1800","OKL1803","Steamer1803","Steamer1804","Steamer1805","Steamer2002","Steamer2003","Steamer1501","Steamer1801","Steamer1802","Steamer1808","Steamer2001"],"ELECTRIC OVEN":["OV2900","OV2901","OV2902","OV2903","OV2904","OV2905","OV2906","OV2907"],"Emergency Light":["CB2283","CB2284","CB2285","CB2286","Glare36","IL678","IL680","IL683","IL685","IL686","IL687","IL688","IL689","IL692","IL693","IL694","IL695","IL696","IL697","IL698","IL700","IL701","IL702","IL703","OL888+","SHINE L","TL600"],"FLASH LIGHT COMBO":["CB2222","CB2223","CB2224","CB2225","CB2226","CB2227","CB2229","CB2230","CB2232","CB2233","CB5555","OBLCB5506","OFLCB5502","OFLCB5505"],"GAS STOVE":["IGS11","IGS121","IGS1212","IGS1213","IGS1214","IGS1222","IGS1233","IGS124","IGS125","SPARCKLE2","Specta2B","Specta3B"],"Grinder":["CG3401","CG3403","MG3801","MG3807"],"HEATER":["CH125","HCB120","HF90","HQ80","HQ81","HR91","HR92","HR93","OH13","OHF13"],"Hot Plate":["HP102","HP100","HP101","HP201","HP202"],"Induction Cooker":["IC2601","IC2602"],"INFRARED COOKTOP":["IR2701","IR2705","IR2702","IR2703","IR2704"],"Insect Killer":["IK4602","IK4604","IK4605","IK4606","IK4601","IKB01"],"JUICER BLENDER":["BL1002","BL1004","BL313","BL319","BL320","BL322","BL3500","BL3501","BL3502","BL3503","BL3507","BL3508","BL3509","BL3511","BL3533","BL390","BL315","BL316","BL318","EZMXZJ500LB","FP313","GSM3309","HB3201","HB3206","HB3207","HM3201","HM3301","HM3302","HM3304","JB101","JB414","JB415","JR13","JR3504","JR3505","JR3506","JR3510","JR3511","OB414","OBL1002","OBL5201","OBL5202","PBL01","PBL02","SB1500","SM3303","SM3305","SM3306","SM3307","SM3308"],"Karaoke Wireless Microphone":["KM1301","KM1302"],"Kitchen Hob":["BIHG5","BIHS4","BIHS5"],"KITCHEN SCALE":["KS01"],"LED LAMP FLASH LIGHT COMBO":["CB2287","CB2288","OBLCB5583"],"TV":["LED TV 100 INCH","LED TV 24 INCH","LED TV 32 INCH","LED TV 40 INCH","LED TV 42 INCH","LED TV 43 INCH","LED TV 45 INCH","LED TV 50 INCH","LED TV 55 INCH","LED TV 58 INCH","LED TV 60 INCH","LED TV 65 INCH","LED TV 70 INCH","LED TV 75 INCH","LED TV 85 INCH"],"Massager Gun":["PMG8"],"Micro Waveoven":["MO8101","MO8102","MO8125DGB","MO8142DGB"],"Pedestal and Table Fan":["BF7510","BF7512","CF01","CF02","PF01","PF7501","PF7502","PF7504","TF7505","TF7506","TWISTER36","TwisterPro","WF7503"],"PERSONAL CARE":["FS1401","GK401","GK402","GK403","HD1K2","HD1K3","HD1K4","HD1K5","HD1K6","HD1K7","HS301","HS302","HS303","HS304","HS305","HS306","HS307","HSK101","IHC3","IHC5","IHC7","IHC8","IHC9","ISV2","ISV3","ISV4","OGK301","OGK302","OGK402","OHC01","OHC03","TIDY111","TIDY221","TIDY220"],"PERSONAL SCALE":["PS01","PS02","PS03"],"Portable Speaker":["GTS25B","OTS35","P10","TS1104","TS1105","TS1106","TS1107","TS1108","TS1109","TS25B","TS4001","TS4002","TS8001","TS81"],"POWER SOCKET":["PS7402","PS7403","PS7404","PS7405","PS7406"],"Power Station":["IP12001"],"Pressure Cooker":["5C3","ADPC10E","AIPC3","AIPC5","DAPC10","DAPC11","DAPC5","DAPC7","DAPC9","DPC7G","DPC9A","ECO3","EPC3E","IFC235","IPC501","IPC503","NORMA3","NORMA5","Prima3","SPC5E","TDPC5M","TPC5"],"RADIO":["MELODY","MELODYPLUS","MELODYPRO","MELODYPRO RD 1201"],"Recharge Fan":["Breeze C1","Breeze D1","Breeze D2","Breeze D3","Breeze D4","Breeze D6","Breeze D7","Breeze D9","Breeze D5","Breeze D8","HF01","HF02"],"Refrigerator":["IMBC100","IMCF100","IMCF150","IMCF200","IMRF140","IMSC300W","IMSC400B","IRF138","IRF200","IRF220","IRF250","IRF290","IRF335","IRF420","IRF46","IRF470","IRF520SS","IRF550SBSS"],"RICE COOKER":["MAGICPAN WS18","RC2801","RC2802","RC2803","RC2804","RC2805"],"Roti Maker":["BM3010"],"Sandwich Maker":["BQ6110","BQ6111","SW3601","SW3603","SW3604","SW3605","SW3606","SW3607"],"Stage Speaker":["ST80A"],"Torch Light":["BEAMQ2","BEAMQ21","G22B","G23B","Glister20","Glister22","Glister23","HL2201","HL2202","HL2203","HunterH1","HunterZ0","HunterZ1Plus","HunterZ1","HunterZ2","HunterZ3","HunterZ4","HunterZ5","HunterZ6","HunterZ7","HunterZ8","KL200","LeaderL2","LeaderP2","LEADER PLUSP 1","LEADER PLUSP 2","LuminC2","LuminC3","LuminX0","LuminX10","LuminX2","LuminX21","LuminX3","LuminX4","LuminX40","LuminX6","Lumin-A4","LuminX1","OFLCB5503","Radian24","UltraX20","UltraX40"],"TROLLEY SPEAKER":["OTS85","ST80AN","TS1103","TS1104","TS1110B","TS25B","TS25C","TS4002","TS81"],"Vaccum Flask":["DSFK750","VF4801","VF4802","VF4803","VF4804","VF4806"],"VACUUM CLEANER":["OVC5301","OVC5304","VC4701","VC4702","VC4703","VC4704","VC4705","VC4706","VC4707","VC4708","VC4709","VC4721T"],"Washing Mechine":["WM0500TPW","WM0600FW","WM0700TMG","WM0700TPW","WM0750FS","WM0800FS","WM0800TMG","WM1000FS","WM1000TMG","WM1000TPW","WM1200TMG","WM1400TWG","WM4202","WM4203","WM4204","WM4205","WM4214","WM4215","WM4218"],"WATER DISPENSER":["WD3901","WD3902","WD3903","WD3904","WD3905","WD3906 BLW"],"Wireless Head phone":["EP1601"]};
+let catalogData = {};
 let selectedCategory = null;
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -475,11 +481,39 @@ function showScreen(id) {
   document.getElementById(id).classList.add('active');
 }
 
-function showToast(msg) {
+function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
   t.textContent = msg;
+  if (type === 'error') {
+    t.style.background = 'var(--red)';
+  } else {
+    t.style.background = 'var(--green)';
+  }
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function showCatalogLoading(show) {
+  const loader = document.getElementById('catalog-loading');
+  if (loader) loader.style.display = show ? 'flex' : 'none';
+  if (show) document.getElementById('catalog-error').style.display = 'none';
+}
+
+function showCatalogError(msg) {
+  const err = document.getElementById('catalog-error');
+  if (err) {
+    err.textContent = msg;
+    err.style.display = 'block';
+  }
 }
 
 // ── Init / Auth ──────────────────────────────────────────────────────────
@@ -487,7 +521,6 @@ function init() {
   if (adminKey === ADMIN_KEY_EXPECTED) {
     showScreen('screen-dashboard');
     loadTickets();
-    renderCatalogCategories();
   } else {
     showScreen('screen-login');
   }
@@ -502,7 +535,6 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
     document.getElementById('login-error').style.display = 'none';
     showScreen('screen-dashboard');
     loadTickets();
-    renderCatalogCategories();
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
@@ -522,6 +554,10 @@ function switchTab(tabId) {
   
   event.target.classList.add('active');
   document.getElementById('tab-' + tabId).classList.add('active');
+
+  if (tabId === 'catalog') {
+    loadCatalog();
+  }
 }
 
 // ── Tickets ──────────────────────────────────────────────────────────────
@@ -547,7 +583,7 @@ async function loadTickets() {
     }
   } catch (e) {
     console.error("Failed to fetch tickets", e);
-    showToast("Failed to fetch tickets");
+    showToast("Failed to fetch tickets", "error");
   } finally {
     if (btn) btn.disabled = false;
     loader.style.display = 'none';
@@ -630,140 +666,256 @@ async function updateTicketStatus(ticketno, newStatus) {
     
     if (data.success) {
       showToast(`Ticket ${ticketno} updated to ${newStatus}`);
-      // Update local state
       const t = allTickets.find(t => t.ticketno === ticketno);
       if (t) t.status = newStatus;
       renderTickets();
       updateStats();
     } else {
-      showToast('Error updating status');
-      loadTickets(); // Refresh
+      showToast('Error updating status', 'error');
+      loadTickets();
     }
   } catch (e) {
-    showToast('Connection error');
+    showToast('Connection error', 'error');
     loadTickets();
   }
 }
 
-// ── Catalog ──────────────────────────────────────────────────────────────
-function renderCatalogCategories() {
-  const catList = document.getElementById('cat-list');
-  const cats = Object.keys(catalog).sort();
-  
-  document.getElementById('cat-count').textContent = cats.length;
+// ── Catalog API Functions ────────────────────────────────────────────────
+
+async function loadCatalog() {
+  try {
+    showCatalogLoading(true);
+    const res  = await fetch(CATALOG_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    if (data.success && data.catalog) {
+      catalogData = data.catalog;
+      renderCategories();
+      if (selectedCategory && catalogData[selectedCategory]) {
+        renderModels(selectedCategory);
+      } else {
+        selectedCategory = null;
+        renderModels(null);
+      }
+    } else {
+      showCatalogError('Failed to load catalog');
+    }
+  } catch(e) {
+    showCatalogError('Connection error — check n8n is running');
+  } finally {
+    showCatalogLoading(false);
+  }
+}
+
+function renderCategories() {
+  const catList  = document.getElementById('cat-list'); 
+  const catCount = document.getElementById('cat-count');
+
+  const cats = Object.keys(catalogData).sort();
+  if (catCount) catCount.textContent = cats.length;
+
+  if (!catList) return;
   catList.innerHTML = '';
-  
+
   cats.forEach(cat => {
-    const el = document.createElement('div');
-    el.className = 'catalog-item' + (selectedCategory === cat ? ' active' : '');
-    el.innerHTML = `
-      <span style="flex:1" onclick="selectCategory('${cat.replace(/'/g, "\\'")}')">${cat}</span>
+    const item = document.createElement('div');
+    item.className = 'catalog-item' + (cat === selectedCategory ? ' active' : '');
+    item.innerHTML = `
+      <span style="flex:1" class="cat-name" onclick="selectCategory('${escapeHtml(cat)}')">${escapeHtml(cat)}</span>
       <div class="item-actions">
-        <button class="catalog-item-btn" onclick="deleteCategory('${cat.replace(/'/g, "\\'")}')" title="Delete">🗑️</button>
+        <button class="catalog-item-btn" onclick="deleteCategory('${escapeHtml(cat)}')">🗑️</button>
       </div>
     `;
-    catList.appendChild(el);
+    catList.appendChild(item);
   });
-  
-  if (!selectedCategory) {
-    document.getElementById('current-cat-name').textContent = 'Select a category';
-    document.getElementById('model-list').innerHTML = '<div style="padding:20px; text-align:center; color:var(--gray-400);">Select a category to view models.</div>';
-    document.getElementById('new-model-input').disabled = true;
-    document.getElementById('btn-add-model').disabled = true;
-  }
 }
 
 function selectCategory(cat) {
   selectedCategory = cat;
-  renderCatalogCategories();
-  renderCatalogModels();
+  renderCategories(); 
+  renderModels(cat);
 }
 
-function renderCatalogModels() {
-  if (!selectedCategory) return;
+function renderModels(cat) {
+  const modelList  = document.getElementById('model-list');
+  const modelTitle = document.getElementById('current-cat-name');
+
+  if (!cat) {
+    if (modelTitle) modelTitle.textContent = 'Select a category';
+    if (modelList) modelList.innerHTML = '<div style="padding:20px; text-align:center; color:var(--gray-400);">Select a category to view models.</div>';
+    document.getElementById('new-model-input').disabled = true;
+    document.getElementById('btn-add-model').disabled = true;
+    return;
+  }
+
+  const models = catalogData[cat] || [];
+  if (modelTitle) modelTitle.textContent = `${cat} (${models.length})`;
   
-  const models = catalog[selectedCategory] || [];
-  const modelList = document.getElementById('model-list');
-  
-  document.getElementById('current-cat-name').textContent = `${selectedCategory} (${models.length})`;
   document.getElementById('new-model-input').disabled = false;
   document.getElementById('btn-add-model').disabled = false;
-  
+
+  if (!modelList) return;
   modelList.innerHTML = '';
-  
+
   if (models.length === 0) {
     modelList.innerHTML = '<div style="padding:20px; text-align:center; color:var(--gray-400);">No models in this category.</div>';
     return;
   }
-  
+
   models.forEach(model => {
-    const el = document.createElement('div');
-    el.className = 'catalog-item';
-    el.innerHTML = `
-      <span>${model}</span>
+    const item = document.createElement('div');
+    item.className = 'catalog-item';
+    item.innerHTML = `
+      <span>${escapeHtml(model)}</span>
       <div class="item-actions">
-        <button class="catalog-item-btn" onclick="deleteModel('${model.replace(/'/g, "\\'")}')" title="Delete">🗑️</button>
+        <button class="catalog-item-btn" onclick="deleteModel('${escapeHtml(cat)}', '${escapeHtml(model)}')">🗑️</button>
       </div>
     `;
-    modelList.appendChild(el);
+    modelList.appendChild(item);
   });
 }
 
-function addCategory() {
-  const inp = document.getElementById('new-cat-input');
-  const cat = inp.value.trim();
-  if (!cat) return;
-  
-  if (catalog[cat]) {
-    showToast('Category already exists');
-    return;
+async function addCategory() {
+  const input    = document.getElementById('new-cat-input');
+  const modelInp = document.getElementById('new-cat-model-input'); 
+  const cat   = input?.value.trim();
+  const model = modelInp?.value.trim() || 'N/A';
+
+  if (!cat) { showToast('Enter a category name', 'error'); return; }
+
+  try {
+    const res  = await fetch(CAT_UPD_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action:   'addCategory',
+        category: cat,
+        model:    model,
+        adminKey: ADMIN_KEY
+      })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      catalogData[cat] = [model];
+      renderCategories();
+      selectCategory(cat);
+      if (input)    input.value    = '';
+      if (modelInp) modelInp.value = '';
+      showToast(`✅ Category "${cat}" added`, 'success');
+    } else {
+      showToast(`❌ ${data.message || data.error}`, 'error');
+    }
+  } catch(e) {
+    showToast('Connection error', 'error');
   }
-  
-  catalog[cat] = [];
-  inp.value = '';
-  selectedCategory = cat;
-  renderCatalogCategories();
-  renderCatalogModels();
-  showToast('Category added');
 }
 
-function deleteCategory(cat) {
-  if (confirm(`Are you sure you want to delete the category "${cat}" and all its models?`)) {
-    delete catalog[cat];
-    if (selectedCategory === cat) selectedCategory = null;
-    renderCatalogCategories();
-    showToast('Category deleted');
+async function deleteCategory(cat) {
+  if (!confirm(`Delete ENTIRE category "${cat}" and all its models?`)) return;
+
+  try {
+    const res  = await fetch(CAT_UPD_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action:   'deleteCategory',
+        category: cat,
+        model:    '',
+        adminKey: ADMIN_KEY
+      })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      delete catalogData[cat];
+      if (selectedCategory === cat) {
+        selectedCategory = null;
+        renderModels(null);
+      }
+      renderCategories();
+      showToast(`✅ Category "${cat}" deleted`, 'success');
+    } else {
+      showToast(`❌ ${data.message || data.error}`, 'error');
+    }
+  } catch(e) {
+    showToast('Connection error', 'error');
   }
 }
 
-function addModel() {
-  if (!selectedCategory) return;
-  const inp = document.getElementById('new-model-input');
-  const model = inp.value.trim();
-  if (!model) return;
-  
-  if (catalog[selectedCategory].includes(model)) {
-    showToast('Model already exists');
-    return;
+async function addModel() {
+  const input = document.getElementById('new-model-input'); 
+  const model = input?.value.trim();
+
+  if (!selectedCategory) { showToast('Select a category first', 'error'); return; }
+  if (!model)            { showToast('Enter a model name', 'error'); return; }
+
+  try {
+    const res  = await fetch(CAT_UPD_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action:   'addModel',
+        category: selectedCategory,
+        model:    model,
+        adminKey: ADMIN_KEY
+      })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      if (!catalogData[selectedCategory]) catalogData[selectedCategory] = [];
+      if (!catalogData[selectedCategory].includes(model)) {
+        catalogData[selectedCategory].push(model);
+        catalogData[selectedCategory].sort();
+      }
+      renderModels(selectedCategory);
+      renderCategories();
+      if (input) input.value = '';
+      showToast(`✅ Model "${model}" added to "${selectedCategory}"`, 'success');
+    } else {
+      showToast(`❌ ${data.message || data.error}`, 'error');
+    }
+  } catch(e) {
+    showToast('Connection error', 'error');
   }
-  
-  catalog[selectedCategory].push(model);
-  catalog[selectedCategory].sort();
-  inp.value = '';
-  renderCatalogModels();
-  showToast('Model added');
 }
 
-function deleteModel(model) {
-  if (!selectedCategory) return;
-  catalog[selectedCategory] = catalog[selectedCategory].filter(m => m !== model);
-  renderCatalogModels();
-  showToast('Model deleted');
+async function deleteModel(cat, model) {
+  if (!confirm(`Delete model "${model}" from "${cat}"?`)) return;
+
+  try {
+    const res  = await fetch(CAT_UPD_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action:   'deleteModel',
+        category: cat,
+        model:    model,
+        adminKey: ADMIN_KEY
+      })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      catalogData[cat] = catalogData[cat].filter(m => m !== model);
+      renderModels(cat);
+      renderCategories();
+      showToast(`✅ Model "${model}" deleted`, 'success');
+    } else {
+      showToast(`❌ ${data.message || data.error}`, 'error');
+    }
+  } catch(e) {
+    showToast('Connection error', 'error');
+  }
 }
 
-function exportCatalog(catalog) {
+function exportCatalog(catalogObj) {
   let csv = 'category,model\n';
-  for (const [cat, models] of Object.entries(catalog)) {
+  for (const [cat, models] of Object.entries(catalogObj)) {
     for (const model of models) {
       const c = cat.includes(',') ? `"${cat}"` : cat;
       const m = model.includes(',') ? `"${model}"` : model;
@@ -777,7 +929,7 @@ function exportCatalog(catalog) {
   a.download = 'ProductCatalog.csv';
   a.click();
   URL.revokeObjectURL(url);
-  showToast('CSV downloaded. Please upload to Google Sheets.');
+  showToast('CSV downloaded. Please upload to Google Sheets.', 'success');
 }
 
 // ── Start ────────────────────────────────────────────────────────────────
