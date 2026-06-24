@@ -461,6 +461,9 @@
       </div>
 
       <p style="font-size:12px;color:var(--gray-400)">You can check your ticket status anytime by messaging us on WhatsApp.</p>
+      <a href="https://wa.me/96654146316" class="btn btn-whatsapp" style="background:#25D366;color:white;margin-top:20px;text-decoration:none;">
+        ↩ Return to WhatsApp
+      </a>
     </div>
   </div>
 </div>
@@ -479,6 +482,19 @@ const CATALOG = {"2.0 Computer Speaker": ["BLUEBLAST", "BTS2011", "BTS2012", "BT
 let dealer = {};
 let phone  = '';
 
+// ── Helpers ───────────────────────────────────────────────────────────────
+async function fetchWithRetry(url, options, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url, options);
+      return res;
+    } catch (e) {
+      if (i === retries - 1) throw e;
+      await new Promise(r => setTimeout(r, 1000 * (i + 1))); // backoff
+    }
+  }
+}
+
 // ── Init ─────────────────────────────────────────────────────────────────
 async function init() {
   const params = new URLSearchParams(window.location.search);
@@ -490,7 +506,7 @@ async function init() {
   }
 
   try {
-    const res  = await fetch(CHECK_URL, {
+    const res  = await fetchWithRetry(CHECK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'check', phone })
@@ -587,14 +603,14 @@ async function submitPickup() {
   errEl.className = 'alert'; errEl.style.display = 'none';
 
   btn.disabled = true;
-  btnText.textContent = '⏳ Creating ticket…';
+  btnText.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0;border-top-color:white;"></div> Creating ticket…';
 
   const category = document.getElementById('sel-category').value;
   const model    = document.getElementById('sel-model').value;
   const qty      = document.getElementById('inp-qty').value;
 
   try {
-    const res  = await fetch(PICKUP_URL, {
+    const res  = await fetchWithRetry(PICKUP_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>IMPEX — Admin Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green:      #1A6B3C;
+    --green-light:#E8F5EE;
+    --green-mid:  #2E8B57;
+    --amber:      #D97706;
+    --amber-light:#FEF3C7;
+    --red:        #DC2626;
+    --red-light:  #FEE2E2;
+    --blue:       #2563EB;
+    --blue-light: #EFF6FF;
+    --gray-50:    #F9FAFB;
+    --gray-100:   #F3F4F6;
+    --gray-200:   #E5E7EB;
+    --gray-400:   #9CA3AF;
+    --gray-600:   #4B5563;
+    --gray-800:   #1F2937;
+    --white:      #FFFFFF;
+    --radius:     12px;
+    --shadow:     0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--gray-50);
+    min-height: 100vh;
+    color: var(--gray-800);
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── Components ── */
+  .btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary { background: var(--green); color: white; }
+  .btn-primary:hover { background: var(--green-mid); }
+  .btn-secondary { background: var(--gray-200); color: var(--gray-800); }
+  .btn-secondary:hover { background: var(--gray-400); }
+  .btn-danger { background: var(--red); color: white; }
+  .btn-danger:hover { opacity: .9; }
+
+  .input-field {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    color: var(--gray-800);
+    outline: none;
+  }
+  .input-field:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(26,107,60,.1);
+  }
+
+  select.input-field {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  /* ── Login ── */
+  .login-container {
+    max-width: 400px;
+    margin: 100px auto;
+    background: var(--white);
+    padding: 30px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .login-title {
+    color: var(--green);
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  #login-error {
+    color: var(--red);
+    font-size: 14px;
+    margin-bottom: 16px;
+    text-align: center;
+    display: none;
+  }
+
+  /* ── Dashboard Header ── */
+  .header {
+    background: var(--green);
+    color: white;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-left {
+    display: flex;
+    flex-direction: column;
+  }
+  .header-title { font-size: 20px; font-weight: 700; }
+  .header-subtitle { font-size: 13px; opacity: .8; }
+
+  /* ── Tabs ── */
+  .tabs-nav {
+    display: flex;
+    background: white;
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0 24px;
+  }
+  .tab-btn {
+    padding: 16px 24px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gray-600);
+    cursor: pointer;
+  }
+  .tab-btn.active {
+    color: var(--green);
+    border-bottom-color: var(--green);
+  }
+  .tab-pane { display: none; padding: 24px; }
+  .tab-pane.active { display: block; }
+
+  /* ── Stats Cards ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--gray-200);
+  }
+  .stat-card.total { border-left-color: var(--gray-600); }
+  .stat-card.pending { border-left-color: var(--amber); }
+  .stat-card.in-progress { border-left-color: var(--blue); }
+  .stat-card.completed { border-left-color: var(--green); }
+  
+  .stat-title { font-size: 13px; color: var(--gray-600); font-weight: 500; margin-bottom: 8px; }
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--gray-800); }
+
+  /* ── Filters ── */
+  .filters-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .filters-bar .input-field { max-width: 200px; }
+
+  /* ── Table ── */
+  .table-container {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: var(--gray-50);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--gray-600);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--gray-200);
+    font-size: 14px;
+    color: var(--gray-800);
+  }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── Badges ── */
+  .badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge.pending { background: var(--amber-light); color: var(--amber); }
+  .badge.in-progress { background: var(--blue-light); color: var(--blue); }
+  .badge.completed { background: var(--green-light); color: var(--green); }
+  .badge.cancelled { background: var(--red-light); color: var(--red); }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--green);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 1000;
+  }
+  .toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* ── Catalog View ── */
+  .catalog-layout {
+    display: flex;
+    gap: 24px;
+    height: 600px;
+  }
+  .catalog-sidebar, .catalog-main {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+  }
+  .catalog-sidebar { width: 300px; }
+  .catalog-main { flex: 1; }
+  
+  .catalog-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+  }
+  .catalog-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+  }
+  .catalog-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
+  .catalog-item:hover { background: var(--gray-50); }
+  .catalog-item.active { background: var(--green-light); color: var(--green); font-weight: 600; }
+  .item-actions { display: none; gap: 8px; }
+  .catalog-item:hover .item-actions { display: flex; }
+  
+  .catalog-item-btn {
+    background: none; border: none; cursor: pointer; color: var(--red); font-size: 14px;
+  }
+
+  /* ── Spinner ── */
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  .spinner.dark {
+    border-color: var(--gray-200);
+    border-top-color: var(--green);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  
+  .loading-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,.8);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 10;
+    display: none;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ── Login Screen ── -->
+<div id="screen-login" class="screen active">
+  <div class="login-container">
+    <div class="login-title">🏪 IMPEX Admin</div>
+    <div id="login-error">Invalid admin key</div>
+    <form id="login-form">
+      <input type="password" id="admin-key" class="input-field" placeholder="Admin Key" style="margin-bottom:16px" required>
+      <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Login</button>
+    </form>
+  </div>
+</div>
+
+<!-- ── Dashboard Screen ── -->
+<div id="screen-dashboard" class="screen">
+  <div class="header">
+    <div class="header-left">
+      <div class="header-title">🏪 IMPEX Admin Dashboard</div>
+      <div class="header-subtitle">Manage Pickup Requests and Product Catalog</div>
+    </div>
+    <button class="btn btn-secondary" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('tickets')">📋 Tickets</button>
+    <button class="tab-btn" onclick="switchTab('catalog')">📦 Catalog</button>
+  </div>
+
+  <!-- Tickets Tab -->
+  <div id="tab-tickets" class="tab-pane active">
+    
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="stat-title">Total Tickets</div>
+        <div class="stat-value" id="stat-total">0</div>
+      </div>
+      <div class="stat-card pending">
+        <div class="stat-title">Pending</div>
+        <div class="stat-value" id="stat-pending">0</div>
+      </div>
+      <div class="stat-card in-progress">
+        <div class="stat-title">In Progress</div>
+        <div class="stat-value" id="stat-inprogress">0</div>
+      </div>
+      <div class="stat-card completed">
+        <div class="stat-title">Completed</div>
+        <div class="stat-value" id="stat-completed">0</div>
+      </div>
+    </div>
+
+    <div class="filters-bar">
+      <input type="text" id="search-tickets" class="input-field" placeholder="Search ID, Dealer, Product...">
+      <select id="filter-status" class="input-field">
+        <option value="">All Statuses</option>
+        <option value="Pending">Pending</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Completed">Completed</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+      <button class="btn btn-primary" onclick="loadTickets()" id="btn-refresh">
+        Refresh
+      </button>
+    </div>
+
+    <div class="table-container" style="position:relative;">
+      <div id="tickets-loading" class="loading-overlay">
+        <div class="spinner dark" style="width:30px; height:30px;"></div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Ticket ID</th>
+            <th>Date</th>
+            <th>Dealer</th>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Service Center</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="tickets-tbody">
+          <!-- Rendered via JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Catalog Tab -->
+  <div id="tab-catalog" class="tab-pane">
+    <div style="display:flex; justify-content:space-between; margin-bottom:16px;">
+      <div>
+        <h3 style="font-size:18px; color:var(--gray-800);">Product Catalog Manager</h3>
+        <p style="font-size:13px; color:var(--gray-600); margin-top:4px;">Manage categories and models. Export to CSV to update Google Sheets.</p>
+      </div>
+      <button class="btn btn-primary" onclick="exportCatalogCSV()">📥 Export as CSV</button>
+    </div>
+
+    <div class="catalog-layout">
+      <!-- Categories -->
+      <div class="catalog-sidebar">
+        <div class="catalog-header">
+          Categories (<span id="cat-count">0</span>)
+        </div>
+        <div class="catalog-list" id="cat-list">
+          <!-- Rendered via JS -->
+        </div>
+        <div style="padding:16px; border-top:1px solid var(--gray-200);">
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="new-cat-input" class="input-field" placeholder="New category name">
+            <button class="btn btn-primary" onclick="addCategory()">Add</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Models -->
+      <div class="catalog-main">
+        <div class="catalog-header">
+          Models for: <span id="current-cat-name" style="color:var(--green)">Select a category</span>
+        </div>
+        <div class="catalog-list" id="model-list">
+          <div style="padding:20px; text-align:center; color:var(--gray-400);">
+            Select a category to view models.
+          </div>
+        </div>
+        <div style="padding:16px; border-top:1px solid var(--gray-200);">
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="new-model-input" class="input-field" placeholder="New model name" disabled>
+            <button class="btn btn-primary" id="btn-add-model" onclick="addModel()" disabled>Add Model</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast">Status updated successfully</div>
+
+<script>
+// ── Config ─────────────────────────────────────────────────────────────────
+const N8N_BASE = 'https://n8n.srv1623198.hstgr.cloud/webhook';
+const ADMIN_KEY_EXPECTED = 'IMPEX_ADMIN_2026';
+
+let adminKey = sessionStorage.getItem('adminKey') || '';
+let allTickets = [];
+
+// Embedded Catalog (Fallback/Initial State)
+let catalog = {"2.0 Computer Speaker": ["BLUEBLAST", "BTS2011", "BTS2012", "BTS2013", "BTS2014", "BTS2015", "BTS2016", "BTS2020", "Gear2", "Molto", "SB402", "SB1401", "Gear3", "Thunder-T1Plus"], "2.1 Multimedia Speaker": ["BeatBeamSB6000", "HT2112", "HT2114", "MaestroJunior", "MicroR1", "MiniBangHT2116", "MiniRock", "MusicR", "OHT201R", "PianoBL", "SB6000", "Spinto-HT2104", "Spinto-HT2111"], "3.1 Home Theatre": ["HT3101"], "5.1 Home Theatre": ["Bang-HT-5106", "BEATB2", "BEATB3", "BLUEROCKHT5103", "BravoHT5107", "Bravo-HT5101", "FXMS-513", "HT5105", "HT5107BRAVO", "MAGNETO[HT5104]"], "Air Conditioner": ["SplitAC1.5ton", "WindowAC1.5ton", "SplitAC2ton", "WindowAC2ton"], "Air Cooler": ["FREEZO19", "FREEZO22", "FREEZO25", "FREEZO55", "Storm100"], "Air Fryer": ["AF4301", "AF4302", "AF4303", "AF4304", "AF4305", "AF4306", "AF4307", "AF4308", "AF4309", "AF4310", "AF4500"], "Bread Toaster": ["BD3702"], "Ceiling Lamp": ["GL36A", "Glare33", "Glare34", "Glare36"], "Chopper": ["FC3202", "FC3203", "FC3204B", "FC3205", "FC3206", "FC3222", "MS400", "MS900"], "Coffe Maker": ["CGR3001", "CGR3002", "CM1912", "CM1915", "ECM1916", "IECM2001", "IECM2002", "IECM2003", "TCM1002", "TCM1001"], "Cookware": ["ABP32HE", "ACS10HE", "ACS12M", "ACS8HE", "ADPC3E", "ADPC5E", "AFP28GE", "APF2620", "APTR35GE", "ASP26IE", "ASP32GE", "DFP2428W", "DGDNMP16M", "DSK5W", "DSK9W", "DTKP32", "KUK7", "KUK9", "NCB7101", "NCB7104", "NCB7108", "NCB7110", "NCS8G"], "Deep Fryer": ["IDF1003"], "Digital Video Broadcast": ["IXHDR101", "IXHDR102"], "Dish Washer": ["IDW13PS", "IDW15PS"], "Electric Cooker": ["EP3", "EP3C5", "EPC10", "EPC12", "EPC15", "EPC17", "EPC5", "EPC6", "EPC8"], "Electric Iron Box": ["Flexi", "IB191", "IB200", "IB201", "IB21", "IB211", "IBD501", "IBS401", "IBS402", "IBS403", "IBS404", "OIB601H", "SHOWY"], "Garment Steamer": ["GSM6010", "GSM6011", "GSM6012", "GSM6013", "GSM6014", "GSM6015", "GSM6016", "GSM6017"], "Electric Kettle": ["GST1501", "GST1802", "GST1803", "GST1805", "GST2002", "GST2001", "OKL1800", "OKL1803", "Steamer1803", "Steamer1804", "Steamer1805", "Steamer2002", "Steamer2003", "Steamer1501", "Steamer1801", "Steamer1802", "Steamer1808", "Steamer2001"], "ELECTRIC OVEN": ["OV2900", "OV2901", "OV2902", "OV2903", "OV2904", "OV2905", "OV2906", "OV2907"], "Emergency Light": ["CB2283", "CB2284", "CB2285", "CB2286", "Glare36", "IL678", "IL680", "IL683", "IL685", "IL686", "IL687", "IL688", "IL689", "IL692", "IL693", "IL694", "IL695", "IL696", "IL697", "IL698", "IL700", "IL701", "IL702", "IL703", "OL888+", "SHINE L", "TL600"], "FLASH LIGHT COMBO": ["CB2222", "CB2223", "CB2224", "CB2225", "CB2226", "CB2227", "CB2229", "CB2230", "CB2232", "CB2233", "CB5555", "OBLCB5506", "OFLCB5502", "OFLCB5505"], "GAS STOVE": ["IGS11", "IGS121", "IGS1212", "IGS1213", "IGS1214", "IGS1222", "IGS1233", "IGS124", "IGS125", "SPARCKLE2", "Specta2B", "Specta3B"], "Grinder": ["CG3401", "CG3403", "MG3801", "MG3807"], "HEATER": ["CH125", "HCB120", "HF90", "HQ80", "HQ81", "HR91", "HR92", "HR93", "OH13", "OHF13"], "Hot Plate": ["HP102", "HP100", "HP101", "HP201", "HP202"], "Induction Cooker": ["IC2601", "IC2602"], "INFRARED COOKTOP": ["IR2701", "IR2705", "IR2702", "IR2703", "IR2704"], "Insect Killer": ["IK4602", "IK4604", "IK4605", "IK4606", "IK4601", "IKB01"], "JUICER BLENDER": ["BL1002", "BL1004", "BL313", "BL319", "BL320", "BL322", "BL3500", "BL3501", "BL3502", "BL3503", "BL3507", "BL3508", "BL3509", "BL3511", "BL3533", "BL390", "BL315", "BL316", "BL318", "EZMXZJ500LB", "FP313", "GSM3309", "HB3201", "HB3206", "HB3207", "HM3201", "HM3301", "HM3302", "HM3304", "JB101", "JB414", "JB415", "JR13", "JR3504", "JR3505", "JR3506", "JR3510", "JR3511", "OB414", "OBL1002", "OBL5201", "OBL5202", "PBL01", "PBL02", "SB1500", "SM3303", "SM3305", "SM3306", "SM3307", "SM3308"], "Karaoke Wireless Microphone": ["KM1301", "KM1302"], "Kitchen Hob": ["BIHG5", "BIHS4", "BIHS5"], "KITCHEN SCALE": ["KS01"], "LED LAMP FLASH LIGHT COMBO": ["CB2287", "CB2288", "OBLCB5583"], "TV": ["LED TV 100 INCH", "LED TV 24 INCH", "LED TV 32 INCH", "LED TV 40 INCH", "LED TV 42 INCH", "LED TV 43 INCH", "LED TV 45 INCH", "LED TV 50 INCH", "LED TV 55 INCH", "LED TV 58 INCH", "LED TV 60 INCH", "LED TV 65 INCH", "LED TV 70 INCH", "LED TV 75 INCH", "LED TV 85 INCH"], "Massager Gun": ["PMG8"], "Micro Waveoven": ["MO8101", "MO8102", "MO8125DGB", "MO8142DGB"], "Pedestal and Table Fan": ["BF7510", "BF7512", "CF01", "CF02", "PF01", "PF7501", "PF7502", "PF7504", "TF7505", "TF7506", "TWISTER36", "TwisterPro", "WF7503"], "PERSONAL CARE": ["FS1401", "GK401", "GK402", "GK403", "HD1K2", "HD1K3", "HD1K4", "HD1K5", "HD1K6", "HD1K7", "HS301", "HS302", "HS303", "HS304", "HS305", "HS306", "HS307", "HSK101", "IHC3", "IHC5", "IHC7", "IHC8", "IHC9", "ISV2", "ISV3", "ISV4", "OGK301", "OGK302", "OGK402", "OHC01", "OHC03", "TIDY111", "TIDY221", "TIDY220"], "PERSONAL SCALE": ["PS01", "PS02", "PS03"], "Portable Speaker": ["GTS25B", "OTS35", "P10", "TS1104", "TS1105", "TS1106", "TS1107", "TS1108", "TS1109", "TS25B", "TS4001", "TS4002", "TS8001", "TS81"], "POWER SOCKET": ["PS7402", "PS7403", "PS7404", "PS7405", "PS7406"], "Power Station": ["IP12001"], "Pressure Cooker": ["5C3", "ADPC10E", "AIPC3", "AIPC5", "DAPC10", "DAPC11", "DAPC5", "DAPC7", "DAPC9", "DPC7G", "DPC9A", "ECO3", "EPC3E", "IFC235", "IPC501", "IPC503", "NORMA3", "NORMA5", "Prima3", "SPC5E", "TDPC5M", "TPC5"], "RADIO": ["MELODY", "MELODYPLUS", "MELODYPRO", "MELODYPRO RD 1201"], "Recharge Fan": ["Breeze C1", "Breeze D1", "Breeze D2", "Breeze D3", "Breeze D4", "Breeze D6", "Breeze D7", "Breeze D9", "Breeze D5", "Breeze D8", "HF01", "HF02"], "Refrigerator": ["IMBC100", "IMCF100", "IMCF150", "IMCF200", "IMRF140", "IMSC300W", "IMSC400B", "IRF138", "IRF200", "IRF220", "IRF250", "IRF290", "IRF335", "IRF420", "IRF46", "IRF470", "IRF520SS", "IRF550SBSS"], "RICE COOKER": ["MAGICPAN WS18", "RC2801", "RC2802", "RC2803", "RC2804", "RC2805"], "Roti Maker": ["BM3010"], "Sandwich Maker": ["BQ6110", "BQ6111", "SW3601", "SW3603", "SW3604", "SW3605", "SW3606", "SW3607"], "Stage Speaker": ["ST80A"], "Torch Light": ["BEAMQ2", "BEAMQ21", "G22B", "G23B", "Glister20", "Glister22", "Glister23", "HL2201", "HL2202", "HL2203", "HunterH1", "HunterZ0", "HunterZ1Plus", "HunterZ1", "HunterZ2", "HunterZ3", "HunterZ4", "HunterZ5", "HunterZ6", "HunterZ7", "HunterZ8", "KL200", "LeaderL2", "LeaderP2", "LEADER PLUSP 1", "LEADER PLUSP 2", "LuminC2", "LuminC3", "LuminX0", "LuminX10", "LuminX2", "LuminX21", "LuminX3", "LuminX4", "LuminX40", "LuminX6", "Lumin-A4", "LuminX1", "OFLCB5503", "Radian24", "UltraX20", "UltraX40"], "TROLLEY SPEAKER": ["OTS85", "ST80AN", "TS1103", "TS1104", "TS1110B", "TS25B", "TS25C", "TS4002", "TS81"], "Vaccum Flask": ["DSFK750", "VF4801", "VF4802", "VF4803", "VF4804", "VF4806"], "VACUUM CLEANER": ["OVC5301", "OVC5304", "VC4701", "VC4702", "VC4703", "VC4704", "VC4705", "VC4706", "VC4707", "VC4708", "VC4709", "VC4721T"], "Washing Mechine": ["WM0500TPW", "WM0600FW", "WM0700TMG", "WM0700TPW", "WM0750FS", "WM0800FS", "WM0800TMG", "WM1000FS", "WM1000TMG", "WM1000TPW", "WM1200TMG", "WM1400TWG", "WM4202", "WM4203", "WM4204", "WM4205", "WM4214", "WM4215", "WM4218"], "WATER DISPENSER": ["WD3901", "WD3902", "WD3903", "WD3904", "WD3905", "WD3906 BLW"], "Wireless Head phone": ["EP1601"]};
+let selectedCategory = null;
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+async function fetchWithRetry(url, options, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url, options);
+      return res;
+    } catch (e) {
+      if (i === retries - 1) throw e;
+      await new Promise(r => setTimeout(r, 1000 * (i + 1))); // backoff
+    }
+  }
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Init / Auth ──────────────────────────────────────────────────────────
+function init() {
+  if (adminKey === ADMIN_KEY_EXPECTED) {
+    showScreen('screen-dashboard');
+    loadTickets();
+    renderCatalogCategories();
+  } else {
+    showScreen('screen-login');
+  }
+}
+
+document.getElementById('login-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const val = document.getElementById('admin-key').value;
+  if (val === ADMIN_KEY_EXPECTED) {
+    adminKey = val;
+    sessionStorage.setItem('adminKey', val);
+    document.getElementById('login-error').style.display = 'none';
+    showScreen('screen-dashboard');
+    loadTickets();
+    renderCatalogCategories();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+});
+
+function logout() {
+  sessionStorage.removeItem('adminKey');
+  adminKey = '';
+  document.getElementById('admin-key').value = '';
+  showScreen('screen-login');
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────────────
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  
+  event.target.classList.add('active');
+  document.getElementById('tab-' + tabId).classList.add('active');
+}
+
+// ── Tickets ──────────────────────────────────────────────────────────────
+async function loadTickets() {
+  const btn = document.getElementById('btn-refresh');
+  const loader = document.getElementById('tickets-loading');
+  
+  if (btn) btn.disabled = true;
+  loader.style.display = 'flex';
+
+  try {
+    const res = await fetchWithRetry(`${N8N_BASE}/impex-status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'getAll', phone: '', adminKey })
+    });
+    const data = await res.json();
+    
+    if (data.tickets) {
+      allTickets = data.tickets;
+      renderTickets();
+      updateStats();
+    }
+  } catch (e) {
+    console.error("Failed to fetch tickets", e);
+    showToast("Failed to fetch tickets");
+  } finally {
+    if (btn) btn.disabled = false;
+    loader.style.display = 'none';
+  }
+}
+
+function renderTickets() {
+  const tbody = document.getElementById('tickets-tbody');
+  const filterStatus = document.getElementById('filter-status').value;
+  const searchQ = document.getElementById('search-tickets').value.toLowerCase();
+  
+  tbody.innerHTML = '';
+  
+  const filtered = allTickets.filter(t => {
+    if (filterStatus && t.status !== filterStatus) return false;
+    if (searchQ) {
+      const combined = `${t.ticketno} ${t.dealername} ${t.product}`.toLowerCase();
+      if (!combined.includes(searchQ)) return false;
+    }
+    return true;
+  });
+  
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-400);">No tickets found.</td></tr>';
+    return;
+  }
+  
+  filtered.forEach(t => {
+    const statusClass = t.status.toLowerCase().replace(' ', '-');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:600">${t.ticketno}</td>
+      <td>${t.date || t.createdat || ''}</td>
+      <td>
+        <div style="font-weight:500">${t.dealername}</div>
+        <div style="font-size:12px;color:var(--gray-400)">${t.mobile || ''}</div>
+      </td>
+      <td>${t.product}</td>
+      <td>${t.quantity}</td>
+      <td>${t.servicecenter || ''}</td>
+      <td><span class="badge ${statusClass}">${t.status}</span></td>
+      <td>
+        <select class="input-field" style="padding:6px 24px 6px 10px; font-size:13px;" onchange="updateTicketStatus('${t.ticketno}', this.value)">
+          <option value="Pending" ${t.status === 'Pending' ? 'selected' : ''}>Pending</option>
+          <option value="In Progress" ${t.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+          <option value="Completed" ${t.status === 'Completed' ? 'selected' : ''}>Completed</option>
+          <option value="Cancelled" ${t.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+        </select>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateStats() {
+  let pending = 0, inprogress = 0, completed = 0;
+  allTickets.forEach(t => {
+    if (t.status === 'Pending') pending++;
+    else if (t.status === 'In Progress') inprogress++;
+    else if (t.status === 'Completed') completed++;
+  });
+  
+  document.getElementById('stat-total').textContent = allTickets.length;
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-inprogress').textContent = inprogress;
+  document.getElementById('stat-completed').textContent = completed;
+}
+
+document.getElementById('filter-status').addEventListener('change', renderTickets);
+document.getElementById('search-tickets').addEventListener('input', renderTickets);
+
+async function updateTicketStatus(ticketno, newStatus) {
+  try {
+    const res = await fetchWithRetry(`${N8N_BASE}/impex-update-status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticketno, status: newStatus, adminKey })
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      showToast(`Ticket ${ticketno} updated to ${newStatus}`);
+      // Update local state
+      const t = allTickets.find(t => t.ticketno === ticketno);
+      if (t) t.status = newStatus;
+      renderTickets();
+      updateStats();
+    } else {
+      showToast('Error updating status');
+      loadTickets(); // Refresh
+    }
+  } catch (e) {
+    showToast('Connection error');
+    loadTickets();
+  }
+}
+
+// ── Catalog ──────────────────────────────────────────────────────────────
+function renderCatalogCategories() {
+  const catList = document.getElementById('cat-list');
+  const cats = Object.keys(catalog).sort();
+  
+  document.getElementById('cat-count').textContent = cats.length;
+  catList.innerHTML = '';
+  
+  cats.forEach(cat => {
+    const el = document.createElement('div');
+    el.className = 'catalog-item' + (selectedCategory === cat ? ' active' : '');
+    el.innerHTML = `
+      <span style="flex:1" onclick="selectCategory('${cat.replace(/'/g, "\\'")}')">${cat}</span>
+      <div class="item-actions">
+        <button class="catalog-item-btn" onclick="deleteCategory('${cat.replace(/'/g, "\\'")}')" title="Delete">🗑️</button>
+      </div>
+    `;
+    catList.appendChild(el);
+  });
+  
+  if (!selectedCategory) {
+    document.getElementById('current-cat-name').textContent = 'Select a category';
+    document.getElementById('model-list').innerHTML = '<div style="padding:20px; text-align:center; color:var(--gray-400);">Select a category to view models.</div>';
+    document.getElementById('new-model-input').disabled = true;
+    document.getElementById('btn-add-model').disabled = true;
+  }
+}
+
+function selectCategory(cat) {
+  selectedCategory = cat;
+  renderCatalogCategories();
+  renderCatalogModels();
+}
+
+function renderCatalogModels() {
+  if (!selectedCategory) return;
+  
+  const models = catalog[selectedCategory] || [];
+  const modelList = document.getElementById('model-list');
+  
+  document.getElementById('current-cat-name').textContent = `${selectedCategory} (${models.length})`;
+  document.getElementById('new-model-input').disabled = false;
+  document.getElementById('btn-add-model').disabled = false;
+  
+  modelList.innerHTML = '';
+  
+  if (models.length === 0) {
+    modelList.innerHTML = '<div style="padding:20px; text-align:center; color:var(--gray-400);">No models in this category.</div>';
+    return;
+  }
+  
+  models.forEach(model => {
+    const el = document.createElement('div');
+    el.className = 'catalog-item';
+    el.innerHTML = `
+      <span>${model}</span>
+      <div class="item-actions">
+        <button class="catalog-item-btn" onclick="deleteModel('${model.replace(/'/g, "\\'")}')" title="Delete">🗑️</button>
+      </div>
+    `;
+    modelList.appendChild(el);
+  });
+}
+
+function addCategory() {
+  const inp = document.getElementById('new-cat-input');
+  const cat = inp.value.trim();
+  if (!cat) return;
+  
+  if (catalog[cat]) {
+    showToast('Category already exists');
+    return;
+  }
+  
+  catalog[cat] = [];
+  inp.value = '';
+  selectedCategory = cat;
+  renderCatalogCategories();
+  renderCatalogModels();
+  showToast('Category added');
+}
+
+function deleteCategory(cat) {
+  if (confirm(`Are you sure you want to delete the category "${cat}" and all its models?`)) {
+    delete catalog[cat];
+    if (selectedCategory === cat) selectedCategory = null;
+    renderCatalogCategories();
+    showToast('Category deleted');
+  }
+}
+
+function addModel() {
+  if (!selectedCategory) return;
+  const inp = document.getElementById('new-model-input');
+  const model = inp.value.trim();
+  if (!model) return;
+  
+  if (catalog[selectedCategory].includes(model)) {
+    showToast('Model already exists');
+    return;
+  }
+  
+  catalog[selectedCategory].push(model);
+  catalog[selectedCategory].sort();
+  inp.value = '';
+  renderCatalogModels();
+  showToast('Model added');
+}
+
+function deleteModel(model) {
+  if (!selectedCategory) return;
+  catalog[selectedCategory] = catalog[selectedCategory].filter(m => m !== model);
+  renderCatalogModels();
+  showToast('Model deleted');
+}
+
+function exportCatalogCSV() {
+  let csv = 'Category,Model\n';
+  Object.keys(catalog).sort().forEach(cat => {
+    const models = catalog[cat];
+    if (models.length === 0) {
+      csv += `"${cat}",\n`;
+    } else {
+      models.forEach(model => {
+        csv += `"${cat}","${model}"\n`;
+      });
+    }
+  });
+  
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ProductCatalog.csv';
+  a.click();
+  window.URL.revokeObjectURL(url);
+  showToast('CSV downloaded. Please upload to Google Sheets.');
+}
+
+// ── Start ────────────────────────────────────────────────────────────────
+init();
+</script>
+
+</body>
+</html>
