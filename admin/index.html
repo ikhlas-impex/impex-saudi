@@ -667,7 +667,23 @@ async function updateTicketStatus(ticketno, newStatus) {
     if (data.success) {
       showToast(`Ticket ${ticketno} updated to ${newStatus}`);
       const t = allTickets.find(t => t.ticketno === ticketno);
-      if (t) t.status = newStatus;
+      if (t) {
+        t.status = newStatus;
+        
+        // Fire-and-forget webhook to trigger WhatsApp confirmation
+        fetch("https://n8n.srv1623198.hstgr.cloud/webhook/impex-status-update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ticketno: t.ticketno,
+            product: t.product,
+            status: newStatus,
+            servicecenter: t.servicecenter || '',
+            mobile: t.mobile || ''
+          })
+        }).catch(err => console.error("WhatsApp notification webhook failed", err));
+      }
+      
       renderTickets();
       updateStats();
     } else {
