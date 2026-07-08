@@ -600,7 +600,7 @@ function renderTickets() {
   const filtered = allTickets.filter(t => {
     if (filterStatus && t.status !== filterStatus) return false;
     if (searchQ) {
-      const combined = `${t.ticketno} ${t.dealername} ${t.product}`.toLowerCase();
+      const combined = `${t.ticketno} ${t.dealername} ${t.product} ${t.requestgroupid || ''}`.toLowerCase();
       if (!combined.includes(searchQ)) return false;
     }
     return true;
@@ -613,9 +613,14 @@ function renderTickets() {
   
   filtered.forEach(t => {
     const statusClass = t.status.toLowerCase().replace(' ', '-');
+    const hasGroup = !!t.requestgroupid;
+    const groupIndicator = hasGroup ? `<div style="font-size:10px;color:var(--green);font-weight:600;margin-top:2px;cursor:pointer;" onclick="filterByGroup('${t.requestgroupid}')" title="Click to view all items in this submission">🔗 Group</div>` : '';
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td style="font-weight:600">${t.ticketno}</td>
+      <td style="font-weight:600">
+        ${t.ticketno}
+        ${groupIndicator}
+      </td>
       <td>${t.date || t.createdat || ''}</td>
       <td>
         <div style="font-weight:500">${t.dealername}</div>
@@ -654,6 +659,14 @@ function updateStats() {
 
 document.getElementById('filter-status').addEventListener('change', renderTickets);
 document.getElementById('search-tickets').addEventListener('input', renderTickets);
+
+function filterByGroup(groupId) {
+  const searchInput = document.getElementById('search-tickets');
+  if (searchInput) {
+    searchInput.value = groupId;
+    renderTickets();
+  }
+}
 
 async function updateTicketStatus(ticketno, newStatus) {
   try {

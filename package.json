@@ -1,0 +1,12 @@
+{
+  "name": "impex-saudi-interact",
+  "version": "1.0.0",
+  "description": "IMPEX Defective Product Pickup Request Web App",
+  "main": "index.html",
+  "dependencies": {
+    "googleapis": "^140.0.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  }
+}

@@ -381,29 +381,20 @@
 
   <!-- Product selection -->
   <div class="card" id="card-product">
-    <div class="card-title">📦 Select Product</div>
+    <div class="card-title">📦 Select Product(s)</div>
     <div class="alert" id="form-error"></div>
 
-    <div class="field">
-      <label class="field-label">Category <span class="req">*</span></label>
-      <select id="sel-category">
-        <option value="">— Choose category —</option>
-      </select>
+    <!-- Product Rows Container -->
+    <div id="product-rows-container">
+      <!-- Generated via JavaScript -->
     </div>
 
-    <div class="field">
-      <label class="field-label">Model <span class="req">*</span></label>
-      <select id="sel-model" disabled>
-        <option value="">— Select category first —</option>
-      </select>
-    </div>
+    <button type="button" class="btn btn-secondary" id="btn-add-row" onclick="addProductRow()" style="margin-bottom: 16px; justify-content: center; display: inline-flex; width: auto; font-size: 14px; padding: 10px 16px; align-items: center; gap: 6px;">
+      ➕ Add another product
+    </button>
+    <div id="row-count-helper" style="font-size: 12px; color: var(--gray-400); margin-bottom: 16px; font-weight: 500; text-align: center; display: none;"></div>
 
-    <div class="field">
-      <label class="field-label">Quantity <span class="req">*</span></label>
-      <input type="number" id="inp-qty" min="1" max="99" value="1" placeholder="1">
-    </div>
-
-    <button class="btn btn-primary" id="btn-next" onclick="goConfirm()">
+    <button class="btn btn-primary" id="btn-next" onclick="goConfirm()" disabled>
       Review Request →
     </button>
   </div>
@@ -427,10 +418,11 @@
 
     <div class="summary">
       <div class="summary-row"><span>Dealer</span><span id="conf-dealer">—</span></div>
-      <div class="summary-row"><span>Category</span><span id="conf-category">—</span></div>
-      <div class="summary-row"><span>Model</span><span id="conf-model">—</span></div>
-      <div class="summary-row"><span>Quantity</span><span id="conf-qty">—</span></div>
       <div class="summary-row"><span>Service Center</span><span id="conf-sc">—</span></div>
+      <div style="border-top: 1.5px solid #B7DFC7; margin-top: 12px; padding-top: 12px;">
+        <strong id="conf-items-title" style="font-size: 12px; font-weight: 600; color: var(--green); display: block; margin-bottom: 8px; text-transform: uppercase;">Items</strong>
+        <div id="conf-items-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
+      </div>
     </div>
 
     <div class="alert" id="confirm-error"></div>
@@ -452,12 +444,17 @@
       <div class="ticket-badge" id="success-ticketno">—</div>
 
       <div class="ticket-details">
-        <div class="summary-row"><span>Category</span><span id="suc-category">—</span></div>
-        <div class="summary-row"><span>Model</span><span id="suc-model">—</span></div>
-        <div class="summary-row"><span>Quantity</span><span id="suc-qty">—</span></div>
+        <div class="summary-row" id="suc-row-category"><span>Category</span><span id="suc-category">—</span></div>
+        <div class="summary-row" id="suc-row-model"><span>Model</span><span id="suc-model">—</span></div>
+        <div class="summary-row" id="suc-row-qty"><span>Quantity</span><span id="suc-qty">—</span></div>
         <div class="summary-row"><span>Date</span><span id="suc-date">—</span></div>
         <div class="summary-row"><span>Service Center</span><span id="suc-sc">—</span></div>
         <div class="summary-row"><span>Status</span><span style="color:var(--amber);font-weight:700">Pending</span></div>
+        
+        <div id="suc-multi-container" style="border-top: 1px solid var(--gray-200); margin-top: 12px; padding-top: 12px; display: none;">
+          <strong style="font-size: 12px; color: var(--gray-600); display: block; margin-bottom: 8px; text-transform: uppercase;">Created Tickets:</strong>
+          <div id="suc-tickets-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
+        </div>
       </div>
 
       <p style="font-size:12px;color:var(--gray-400)">You can check your ticket status anytime by messaging us on WhatsApp.</p>
@@ -569,22 +566,8 @@ async function init() {
     document.getElementById('info-sc').textContent       = dealer.servicecenter || 'N/A';
 
     // Populate category dropdown from LIVE catalog
-    const catSel = document.getElementById('sel-category');
-    catSel.innerHTML = '<option value="">— Choose category —</option>';
-    Object.keys(CATALOG).sort().forEach(cat => {
-      const opt = document.createElement('option');
-      opt.value = cat;
-      opt.textContent = cat;
-      catSel.appendChild(opt);
-    });
-
-    if (Object.keys(CATALOG).length === 0) {
-      // Fallback message if catalog failed
-      const opt = document.createElement('option');
-      opt.value    = '';
-      opt.textContent = 'Unable to load categories — try again';
-      catSel.appendChild(opt);
-    }
+    document.getElementById('product-rows-container').innerHTML = '';
+    addProductRow();
 
     showScreen('screen-form');
 
@@ -593,15 +576,99 @@ async function init() {
   }
 }
 
-// ── Category change → populate models ────────────────────────────────────
-document.getElementById('sel-category').addEventListener('change', function() {
-  const cat    = this.value;
-  const modSel = document.getElementById('sel-model');
+// ── Multi-Product Row Management ─────────────────────────────────────────
+let nextRowIndex = 0;
+let activeRowIds = [];
+
+function addProductRow() {
+  if (activeRowIds.length >= 10) return;
+
+  const index = nextRowIndex++;
+  activeRowIds.push(index);
+
+  const container = document.getElementById('product-rows-container');
+  const rowHtml = `
+    <div class="product-row" id="product-row-${index}" style="position: relative; border: 1.5px solid var(--gray-200); border-radius: 8px; padding: 16px; margin-bottom: 16px; background: var(--gray-50);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <strong style="font-size: 12px; color: var(--green); text-transform: uppercase; font-weight: 600;">Product #${activeRowIds.length}</strong>
+        <button type="button" class="btn-remove-row" onclick="removeProductRow(${index})" style="background: none; border: none; color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">✕ Remove</button>
+      </div>
+      <div class="field" style="margin-bottom: 12px;">
+        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;">Category <span class="req">*</span></label>
+        <select class="sel-category-row" onchange="onCategoryChange(${index}, this.value)" style="padding: 10px 12px; font-size: 14px;">
+          <option value="">— Choose category —</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom: 12px;">
+        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;">Model <span class="req">*</span></label>
+        <select class="sel-model-row" disabled onchange="validateRows()" style="padding: 10px 12px; font-size: 14px;">
+          <option value="">— Select category first —</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom: 0;">
+        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;">Quantity <span class="req">*</span></label>
+        <input type="number" class="inp-qty-row" min="1" max="99" value="1" oninput="validateRows()" style="padding: 10px 12px; font-size: 14px;">
+      </div>
+    </div>
+  `;
+
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = rowHtml;
+  container.appendChild(wrapper.firstElementChild);
+
+  // Populate categories in the new row
+  const rowEl = document.getElementById(`product-row-${index}`);
+  const catSel = rowEl.querySelector('.sel-category-row');
+  Object.keys(CATALOG).sort().forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
+    catSel.appendChild(opt);
+  });
+
+  if (Object.keys(CATALOG).length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'Unable to load categories';
+    catSel.appendChild(opt);
+  }
+
+  updateRowsUI();
+  validateRows();
+}
+
+function removeProductRow(index) {
+  if (activeRowIds.length <= 1) return;
+
+  const rowEl = document.getElementById(`product-row-${index}`);
+  if (rowEl) {
+    rowEl.remove();
+  }
+
+  activeRowIds = activeRowIds.filter(id => id !== index);
+
+  // Re-number displays
+  const rows = document.querySelectorAll('.product-row');
+  rows.forEach((row, i) => {
+    const label = row.querySelector('strong');
+    if (label) label.textContent = `Product #${i + 1}`;
+  });
+
+  updateRowsUI();
+  validateRows();
+}
+
+function onCategoryChange(index, cat) {
+  const rowEl = document.getElementById(`product-row-${index}`);
+  if (!rowEl) return;
+
+  const modSel = rowEl.querySelector('.sel-model-row');
   modSel.innerHTML = '';
 
   if (!cat) {
     modSel.innerHTML = '<option value="">— Select category first —</option>';
-    modSel.disabled  = true;
+    modSel.disabled = true;
+    validateRows();
     return;
   }
 
@@ -609,31 +676,104 @@ document.getElementById('sel-category').addEventListener('change', function() {
   modSel.innerHTML = '<option value="">— Choose model —</option>';
   models.forEach(m => {
     const opt = document.createElement('option');
-    opt.value = m; opt.textContent = m;
+    opt.value = m;
+    opt.textContent = m;
     modSel.appendChild(opt);
   });
   modSel.disabled = false;
-});
+  validateRows();
+}
+
+function updateRowsUI() {
+  const len = activeRowIds.length;
+  
+  // Hide/show remove button on the remaining row if only 1 is active
+  document.querySelectorAll('.btn-remove-row').forEach(btn => {
+    btn.style.display = len <= 1 ? 'none' : 'flex';
+  });
+
+  const addBtn = document.getElementById('btn-add-row');
+  const helper = document.getElementById('row-count-helper');
+
+  if (len >= 10) {
+    addBtn.disabled = true;
+    addBtn.style.opacity = '0.5';
+    addBtn.style.cursor = 'not-allowed';
+    helper.textContent = '10/10 items — maximum reached';
+    helper.style.display = 'block';
+  } else {
+    addBtn.disabled = false;
+    addBtn.style.opacity = '1';
+    addBtn.style.cursor = 'pointer';
+    helper.style.display = 'none';
+  }
+}
+
+function validateRows() {
+  const rows = document.querySelectorAll('.product-row');
+  let allValid = true;
+
+  if (rows.length === 0) {
+    allValid = false;
+  }
+
+  rows.forEach(row => {
+    const cat = row.querySelector('.sel-category-row').value;
+    const mod = row.querySelector('.sel-model-row').value;
+    const qty = parseInt(row.querySelector('.inp-qty-row').value) || 0;
+
+    if (!cat || !mod || qty < 1) {
+      allValid = false;
+    }
+  });
+
+  document.getElementById('btn-next').disabled = !allValid;
+}
 
 // ── Go to confirm screen ──────────────────────────────────────────────────
 function goConfirm() {
-  const category = document.getElementById('sel-category').value;
-  const model    = document.getElementById('sel-model').value;
-  const qty      = parseInt(document.getElementById('inp-qty').value) || 0;
-  const errEl    = document.getElementById('form-error');
-
+  const errEl = document.getElementById('form-error');
   errEl.className = 'alert';
   errEl.style.display = 'none';
 
-  if (!category) { showAlert(errEl, 'Please select a category.', 'error'); return; }
-  if (!model)    { showAlert(errEl, 'Please select a model.',    'error'); return; }
-  if (qty < 1)   { showAlert(errEl, 'Quantity must be at least 1.', 'error'); return; }
+  const rows = document.querySelectorAll('.product-row');
+  const items = [];
+  let hasError = false;
 
-  document.getElementById('conf-dealer').textContent   = dealer.dealername;
-  document.getElementById('conf-category').textContent = category;
-  document.getElementById('conf-model').textContent    = model;
-  document.getElementById('conf-qty').textContent      = qty + ' unit' + (qty > 1 ? 's' : '');
-  document.getElementById('conf-sc').textContent       = dealer.servicecenter || 'N/A';
+  rows.forEach((row, i) => {
+    const cat = row.querySelector('.sel-category-row').value;
+    const mod = row.querySelector('.sel-model-row').value;
+    const qty = parseInt(row.querySelector('.inp-qty-row').value) || 0;
+
+    if (!cat) { showAlert(errEl, `Please select a category for item #${i + 1}.`, 'error'); hasError = true; }
+    if (!mod && !hasError) { showAlert(errEl, `Please select a model for item #${i + 1}.`, 'error'); hasError = true; }
+    if (qty < 1 && !hasError) { showAlert(errEl, `Quantity for item #${i + 1} must be at least 1.`, 'error'); hasError = true; }
+
+    items.push({ cat, mod, qty });
+  });
+
+  if (hasError) return;
+
+  document.getElementById('conf-dealer').textContent = dealer.dealername;
+  document.getElementById('conf-sc').textContent     = dealer.servicecenter || 'N/A';
+
+  const listContainer = document.getElementById('conf-items-list');
+  listContainer.innerHTML = '';
+
+  items.forEach((item, i) => {
+    const itemRow = document.createElement('div');
+    itemRow.style.display = 'flex';
+    itemRow.style.justify = 'space-between';
+    itemRow.style.fontSize = '13px';
+    itemRow.style.padding = '4px 0';
+    itemRow.style.borderBottom = i < items.length - 1 ? '1px dashed rgba(26, 107, 60, 0.15)' : 'none';
+    
+    itemRow.innerHTML = `
+      <span style="color: var(--gray-600);">${i + 1}. ${item.cat} — <strong>${item.mod}</strong></span>
+      <span style="font-weight: 600; color: var(--gray-800);">×${item.qty}</span>
+    `;
+    listContainer.appendChild(itemRow);
+  });
 
   showScreen('screen-confirm');
 }
@@ -650,24 +790,23 @@ async function submitPickup() {
   btn.disabled = true;
   btnText.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0;border-top-color:white;"></div> Creating ticket…';
 
-  const category = document.getElementById('sel-category').value;
-  const model    = document.getElementById('sel-model').value;
-  const qty      = document.getElementById('inp-qty').value;
+  const rows = document.querySelectorAll('.product-row');
+  const items = [];
+  rows.forEach(row => {
+    const category = row.querySelector('.sel-category-row').value;
+    const product = row.querySelector('.sel-model-row').value;
+    const quantity = parseInt(row.querySelector('.inp-qty-row').value) || 1;
+    items.push({ category, product, quantity });
+  });
 
   try {
-    const res  = await fetchWithRetry(PICKUP_URL, {
+    const res = await fetchWithRetry('/api/pickup/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        phone:         phone,
-        dealerid:      dealer.dealerid,
-        dealername:    dealer.dealername,
-        product:       category + ' - ' + model,
-        quantity:      qty,
-        region:        dealer.region,
-        subregion:     dealer.subregion,
-        locationgps:   dealer.locationgps,
-        servicecenter: dealer.servicecenter
+        phone: phone,
+        dealerid: dealer.dealerid,
+        items: items
       })
     });
     const data = await res.json();
@@ -680,12 +819,48 @@ async function submitPickup() {
     }
 
     // Show success
-    document.getElementById('success-ticketno').textContent = data.ticketno || '—';
-    document.getElementById('suc-category').textContent     = category;
-    document.getElementById('suc-model').textContent        = model;
-    document.getElementById('suc-qty').textContent          = qty + ' unit' + (qty > 1 ? 's' : '');
-    document.getElementById('suc-date').textContent         = data.date || '—';
-    document.getElementById('suc-sc').textContent           = data.servicecenter || dealer.servicecenter || '—';
+    const tickets = data.tickets || [];
+    document.getElementById('suc-date').textContent = data.date || '—';
+    document.getElementById('suc-sc').textContent   = data.servicecenter || dealer.servicecenter || '—';
+
+    if (tickets.length === 1) {
+      // Single ticket layout
+      document.getElementById('success-ticketno').textContent = tickets[0].ticketno || '—';
+      document.getElementById('suc-row-category').style.display = 'flex';
+      document.getElementById('suc-row-model').style.display = 'flex';
+      document.getElementById('suc-row-qty').style.display = 'flex';
+      document.getElementById('suc-multi-container').style.display = 'none';
+
+      // Parse category and product model
+      const firstItem = items[0];
+      document.getElementById('suc-category').textContent = firstItem.category;
+      document.getElementById('suc-model').textContent    = firstItem.product;
+      document.getElementById('suc-qty').textContent      = firstItem.quantity + ' unit' + (firstItem.quantity > 1 ? 's' : '');
+    } else {
+      // Multi ticket layout
+      document.getElementById('success-ticketno').textContent = 'MULTIPLE TICKETS';
+      document.getElementById('suc-row-category').style.display = 'none';
+      document.getElementById('suc-row-model').style.display = 'none';
+      document.getElementById('suc-row-qty').style.display = 'none';
+      document.getElementById('suc-multi-container').style.display = 'block';
+
+      const multiList = document.getElementById('suc-tickets-list');
+      multiList.innerHTML = '';
+      tickets.forEach((t, i) => {
+        const itemRow = document.createElement('div');
+        itemRow.style.display = 'flex';
+        itemRow.style.justify = 'space-between';
+        itemRow.style.fontSize = '13px';
+        itemRow.style.padding = '4px 0';
+        itemRow.style.borderBottom = i < tickets.length - 1 ? '1px dashed var(--gray-200)' : 'none';
+        
+        itemRow.innerHTML = `
+          <span style="color: var(--gray-600); font-weight: 500;">🎫 <strong>${t.ticketno}</strong> — ${t.product}</span>
+          <span style="font-weight: 600; color: var(--gray-800);">×${t.quantity}</span>
+        `;
+        multiList.appendChild(itemRow);
+      });
+    }
 
     showScreen('screen-success');
   } catch(e) {
