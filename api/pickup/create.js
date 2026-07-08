@@ -85,18 +85,20 @@ module.exports = async (req, res) => {
 
     const sheets = google.sheets({ version: 'v4', auth });
 
-    // Determine the active tickets sheet name (Pickup_Tickets or PickupRequests)
-    let sheetName = 'Pickup_Tickets';
+    // Determine the active tickets sheet name (PickupTickets or PickupRequests)
+    let sheetName = 'PickupTickets';
     try {
       const metadata = await sheets.spreadsheets.get({ spreadsheetId });
       const titles = metadata.data.sheets.map(s => s.properties.title);
       if (titles.includes('PickupRequests')) {
         sheetName = 'PickupRequests';
+      } else if (titles.includes('PickupTickets')) {
+        sheetName = 'PickupTickets';
       } else if (titles.includes('Pickup_Tickets')) {
         sheetName = 'Pickup_Tickets';
       }
     } catch (err) {
-      console.warn('Failed to fetch spreadsheet metadata, defaulting sheet name to Pickup_Tickets:', err.message);
+      console.warn('Failed to fetch spreadsheet metadata, defaulting sheet name to PickupTickets:', err.message);
     }
 
     // Read the sheet to find the max ticket number
