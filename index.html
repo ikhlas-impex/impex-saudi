@@ -812,7 +812,8 @@ async function submitPickup() {
     const data = await res.json();
 
     if (!data.success) {
-      showAlert(errEl, data.error || 'Failed to create ticket. Please try again.', 'error');
+      const errorMsg = data.message ? `${data.error}: ${data.message}` : (data.error || 'Failed to create ticket. Please try again.');
+      showAlert(errEl, errorMsg, 'error');
       btn.disabled = false;
       btnText.textContent = 'Confirm & Create Ticket';
       return;
