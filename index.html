@@ -550,13 +550,37 @@ async function init() {
       return;
     }
 
+    const SC_MAP = {
+      "Riyadh Province":           "Riyadh Service Center",
+      "Al-Qassim Province":        "Riyadh Service Center",
+      "Eastern Province":          "Dammam Service Center",
+      "Madinah Province":          "Madeena Service Center",
+      "Hail Province":             "Madeena Service Center",
+      "Makkah Province":           "Jeddah Service Center",
+      "Tabuk Province":            "Jeddah Service Center",
+      "Al-Jouf Province":          "Jeddah Service Center",
+      "Northern Borders Province": "Jeddah Service Center",
+      "Asir Province":             "Darb Service Center",
+      "Jazan Province":            "Darb Service Center",
+      "Najran Province":           "Darb Service Center",
+      "Al-Baha Province":          "Darb Service Center"
+    };
+
+    let resolvedSC = dealerData.servicecenter || '';
+    if (dealerData.region) {
+      resolvedSC = SC_MAP[dealerData.region] || resolvedSC;
+      if (dealerData.region === "Makkah Province" && dealerData.subregion && dealerData.subregion.toLowerCase().includes("qunfudhah")) {
+        resolvedSC = "Darb Service Center";
+      }
+    }
+
     dealer = {
       dealerid:      dealerData.dealerid      || '',
       dealername:    dealerData.dealername    || '',
       region:        dealerData.region        || '',
       subregion:     dealerData.subregion     || '',
       locationgps:   dealerData.locationgps   || '',
-      servicecenter: dealerData.servicecenter || ''
+      servicecenter: resolvedSC
     };
 
     // Populate dealer info panel
