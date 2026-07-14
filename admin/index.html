@@ -632,7 +632,7 @@ async function loadTickets() {
     });
     const data = await res.json();
     
-    if (!data.success && (data.error === 'Unauthorized' || data.message === 'Invalid session' || data.message === 'Session not found')) {
+    if (!data.success) {
       handleAuthError();
       return;
     }
@@ -738,7 +738,7 @@ async function updateTicketStatus(ticketno, newStatus) {
     });
     const data = await res.json();
 
-    if (!data.success && (data.error === 'Unauthorized' || data.message === 'Invalid session' || data.message === 'Session not found')) {
+    if (!data.success) {
       handleAuthError();
       return;
     }
