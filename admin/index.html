@@ -369,6 +369,9 @@
       <button class="btn btn-primary" onclick="loadTickets()" id="btn-refresh">
         Refresh
       </button>
+      <button class="btn btn-secondary" onclick="exportTickets()" id="btn-export-tickets" style="display:flex; align-items:center; gap:6px;">
+        📥 Export CSV
+      </button>
     </div>
 
     <div class="table-container" style="position:relative;">
@@ -463,6 +466,7 @@ let sessionId = sessionStorage.getItem('sessionId') || '';
 let userRole  = sessionStorage.getItem('userRole') || '';
 let userServiceCenter = sessionStorage.getItem('userServiceCenter') || '';
 let allTickets = [];
+let filteredTickets = [];
 let catalogData = {};
 let selectedCategory = null;
 
@@ -658,7 +662,7 @@ function renderTickets() {
   
   tbody.innerHTML = '';
   
-  const filtered = allTickets.filter(t => {
+  filteredTickets = allTickets.filter(t => {
     if (filterStatus && t.status !== filterStatus) return false;
     if (searchQ) {
       const combined = `${t.ticketno} ${t.dealername} ${t.product} ${t.requestgroupid || ''}`.toLowerCase();
@@ -667,12 +671,12 @@ function renderTickets() {
     return true;
   });
   
-  if (filtered.length === 0) {
+  if (filteredTickets.length === 0) {
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-400);">No tickets found.</td></tr>';
     return;
   }
   
-  filtered.forEach(t => {
+  filteredTickets.forEach(t => {
     const statusClass = t.status.toLowerCase().replace(' ', '-');
     const hasGroup = !!t.requestgroupid;
     const groupIndicator = hasGroup ? `<div style="font-size:10px;color:var(--green);font-weight:600;margin-top:2px;cursor:pointer;" onclick="filterByGroup('${t.requestgroupid}')" title="Click to view all items in this submission">🔗 Group</div>` : '';
@@ -773,6 +777,41 @@ async function updateTicketStatus(ticketno, newStatus) {
     showToast('Connection error', 'error');
     loadTickets();
   }
+}
+
+function exportTickets() {
+  if (!filteredTickets || filteredTickets.length === 0) {
+    showToast('No tickets to export', 'error');
+    return;
+  }
+  
+  let csv = 'Ticket ID,Date,Dealer Name,Mobile,Product,Qty,Service Center,Status\n';
+  
+  filteredTickets.forEach(t => {
+    const tid = `"${t.ticketno || ''}"`;
+    const dt = `"${t.date || t.createdat || ''}"`;
+    const dName = `"${(t.dealername || '').replace(/"/g, '""')}"`;
+    const mob = `"${t.mobile || ''}"`;
+    const prod = `"${(t.product || '').replace(/"/g, '""')}"`;
+    const qty = `"${t.quantity || ''}"`;
+    const sc = `"${t.servicecenter || ''}"`;
+    const st = `"${t.status || ''}"`;
+    
+    csv += `${tid},${dt},${dName},${mob},${prod},${qty},${sc},${st}\n`;
+  });
+  
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  
+  const scName = userServiceCenter ? userServiceCenter.replace(/\s+/g, '_') : 'All_Tickets';
+  const d = new Date().toISOString().split('T')[0];
+  a.download = `IMPEX_${scName}_${d}.csv`;
+  
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Tickets exported successfully', 'success');
 }
 
 // ── Catalog API Functions ────────────────────────────────────────────────
