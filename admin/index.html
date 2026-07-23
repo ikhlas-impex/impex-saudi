@@ -713,9 +713,10 @@ async function loadTickets() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'getAll', phone: '', sessionid: sessionId })
     });
-    const data = await res.json();
+    const rawData = await res.json();
+    const data = Array.isArray(rawData) ? rawData[0] : rawData;
     
-    if (!data.success) {
+    if (!data || !data.success) {
       handleAuthError();
       return;
     }
@@ -1047,18 +1048,18 @@ async function loadDealers() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'getAll', sessionid: sessionId })
     });
-    const data = await res.json();
+    const rawData = await res.json();
+    const data = Array.isArray(rawData) ? rawData[0] : rawData;
     
-    if (!data.success) {
+    if (data && data.success === false && (data.error || data.message)) {
       handleAuthError();
       return;
     }
     
-    if (data.dealers) {
-      allDealers = data.dealers;
-      renderDealers();
-      updateDealerStats();
-    }
+    const dealersList = data ? (data.dealers || data.data || (Array.isArray(rawData) ? rawData : [])) : [];
+    allDealers = Array.isArray(dealersList) ? dealersList : [];
+    renderDealers();
+    updateDealerStats();
   } catch (e) {
     console.error("Failed to fetch dealers", e);
     showToast("Failed to fetch dealers", "error");
@@ -1080,9 +1081,9 @@ function renderDealers() {
   tbody.innerHTML = '';
   
   filteredDealers = allDealers.filter(d => {
-    if (filterStatus && d.status !== filterStatus) return false;
+    if (filterStatus && (d.status || '').trim().toLowerCase() !== filterStatus.trim().toLowerCase()) return false;
     if (searchQ) {
-      const combined = `${d.dealerid} ${d.dealername} ${d.mobilenumber || ''} ${d.region || ''} ${d.subregion || ''} ${d.servicecenter || ''}`.toLowerCase();
+      const combined = `${d.dealerid || ''} ${d.dealername || ''} ${d.mobilenumber || ''} ${d.region || ''} ${d.subregion || ''} ${d.servicecenter || ''}`.toLowerCase();
       if (!combined.includes(searchQ)) return false;
     }
     return true;
