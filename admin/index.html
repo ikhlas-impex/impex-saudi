@@ -1109,9 +1109,14 @@ function renderDealers() {
       <td>${d.registrationdate || ''}</td>
       <td>${statusBadge}</td>
       <td>
-        <button onclick="openEditDealer('${d.dealerid}')" style="padding:6px 10px; border:1px solid #E5E7EB; border-radius:6px; background:white; cursor:pointer; font-size:12px; color:#4B5563; white-space:nowrap;">
-          ✏️ Edit
-        </button>
+        <div style="display:flex; gap:6px;">
+          <button onclick="openEditDealer('${d.dealerid}')" style="padding:6px 10px; border:1px solid #E5E7EB; border-radius:6px; background:white; cursor:pointer; font-size:12px; color:#4B5563; white-space:nowrap;">
+            ✏️ Edit
+          </button>
+          <button onclick="confirmDeleteDealer('${d.dealerid}', '${escapeHtml(d.dealername || '').replace(/'/g, "\\'")}')" style="padding:6px 10px; border:1px solid #FCA5A5; border-radius:6px; background:#FEF2F2; cursor:pointer; font-size:12px; color:#DC2626; white-space:nowrap;">
+            🗑️ Delete
+          </button>
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
@@ -1132,6 +1137,35 @@ function updateDealerStats() {
   if (totalEl) totalEl.textContent = allDealers.length;
   if (activeEl) activeEl.textContent = active;
   if (inactiveEl) inactiveEl.textContent = inactive;
+}
+
+async function confirmDeleteDealer(dealerid, dealername) {
+  if (!confirm(`Are you sure you want to permanently delete ${dealername} (${dealerid})?\n\nThis cannot be undone.`)) {
+    return;
+  }
+
+  if (!sessionId) { handleAuthError(); return; }
+
+  try {
+    const res = await fetchWithRetry('https://n8n.srv1623198.hstgr.cloud/webhook/impex-delete-dealer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionid: sessionId, dealerid })
+    });
+
+    const rawData = await res.json();
+    const data = Array.isArray(rawData) ? rawData[0] : rawData;
+
+    if (!data.success) {
+      alert(data.error || 'Delete failed');
+      return;
+    }
+
+    showToast(`${dealername} deleted successfully`);
+    loadDealers(); // refresh the table
+  } catch (err) {
+    alert('Network error. Please try again.');
+  }
 }
 
 // ── Catalog API Functions ────────────────────────────────────────────────
