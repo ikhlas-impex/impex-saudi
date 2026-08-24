@@ -10,54 +10,69 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --green:      #1A6B3C;
-    --green-light:#E8F5EE;
-    --green-mid:  #2E8B57;
-    --amber:      #D97706;
-    --amber-light:#FEF3C7;
-    --red:        #DC2626;
-    --red-light:  #FEE2E2;
-    --gray-50:    #F9FAFB;
-    --gray-100:   #F3F4F6;
-    --gray-200:   #E5E7EB;
-    --gray-400:   #9CA3AF;
-    --gray-600:   #4B5563;
-    --gray-800:   #1F2937;
-    --white:      #FFFFFF;
-    --radius:     12px;
-    --shadow:     0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+    --background: #ffffff;
+    --foreground: #09090b;
+    --primary:    #18181b;
+    --primary-foreground: #fafafa;
+    --secondary:  #f4f4f5;
+    --secondary-foreground: #18181b;
+    --muted:      #f4f4f5;
+    --muted-foreground: #71717a;
+    --border:     #e4e4e7;
+    --input:      #e4e4e7;
+    --ring:       #18181b;
+    --radius:     8px;
+
+    /* Legacy vars mapped to shadcn */
+    --green:      var(--primary);
+    --green-light:var(--secondary);
+    --green-mid:  #27272a;
+    --amber:      #d97706;
+    --amber-light:#fef3c7;
+    --red:        #ef4444;
+    --red-light:  #fee2e2;
+    --gray-50:    #fafafa;
+    --gray-100:   var(--secondary);
+    --gray-200:   var(--border);
+    --gray-400:   var(--muted-foreground);
+    --gray-600:   var(--muted-foreground);
+    --gray-800:   var(--foreground);
+    --white:      var(--background);
+    --shadow:     0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   }
 
   body {
     font-family: 'Inter', sans-serif;
-    background: var(--gray-50);
+    background: var(--background);
     min-height: 100vh;
-    color: var(--gray-800);
+    color: var(--foreground);
     padding-bottom: 40px;
   }
 
   /* ── Header ── */
   .header {
-    background: var(--green);
-    color: white;
-    padding: 20px 20px 24px;
+    background: var(--white);
+    color: var(--foreground);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
     text-align: center;
   }
   .header-logo {
-    font-size: 22px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 600;
     letter-spacing: -.5px;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
   .header-sub {
-    font-size: 13px;
-    opacity: .75;
+    font-size: 12px;
+    color: var(--muted-foreground);
     font-weight: 400;
   }
 
   /* ── Card ── */
   .card {
     background: var(--white);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     margin: 16px 16px 0;
@@ -65,15 +80,13 @@
   }
 
   .card-title {
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 600;
-    color: var(--green);
-    text-transform: uppercase;
-    letter-spacing: .6px;
-    margin-bottom: 14px;
+    color: var(--foreground);
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
 
   /* ── Dealer info ── */
@@ -112,39 +125,41 @@
 
   select, input[type="number"] {
     width: 100%;
-    padding: 12px 14px;
-    border: 1.5px solid var(--gray-200);
-    border-radius: 8px;
-    font-size: 15px;
+    padding: 9px 12px;
+    border: 1px solid var(--input);
+    border-radius: 6px;
+    font-size: 14px;
     font-family: 'Inter', sans-serif;
-    color: var(--gray-800);
-    background: var(--white);
+    color: var(--foreground);
+    background: var(--background);
     appearance: none;
     -webkit-appearance: none;
     outline: none;
-    transition: border-color .15s;
+    transition: box-shadow .15s, border-color .15s;
   }
   select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
+    background-size: 16px;
     padding-right: 36px;
   }
   select:focus, input[type="number"]:focus {
-    border-color: var(--green);
-    box-shadow: 0 0 0 3px rgba(26,107,60,.1);
+    border-color: var(--ring);
+    box-shadow: 0 0 0 1px var(--ring);
   }
-  select:disabled {
-    background-color: var(--gray-100);
-    color: var(--gray-400);
+  select:disabled, input[type="number"]:disabled {
+    background-color: var(--muted);
+    color: var(--muted-foreground);
     cursor: not-allowed;
+    opacity: 0.5;
   }
 
   /* ── Confirm summary ── */
   .summary {
-    background: var(--green-light);
-    border: 1.5px solid #B7DFC7;
-    border-radius: 10px;
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
     padding: 14px 16px;
     margin-bottom: 16px;
   }
@@ -161,11 +176,11 @@
   /* ── Button ── */
   .btn {
     width: 100%;
-    padding: 15px;
+    padding: 10px 16px;
     border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: 600;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
     font-family: 'Inter', sans-serif;
     cursor: pointer;
     transition: all .15s;
@@ -173,18 +188,21 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   }
   .btn-primary {
-    background: var(--green);
-    color: white;
+    background: var(--primary);
+    color: var(--primary-foreground);
   }
-  .btn-primary:hover:not(:disabled) { background: var(--green-mid); }
+  .btn-primary:hover:not(:disabled) { opacity: 0.9; }
   .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
   .btn-secondary {
-    background: var(--gray-100);
-    color: var(--gray-800);
+    background: var(--background);
+    color: var(--foreground);
+    border: 1px solid var(--input);
     margin-top: 10px;
   }
+  .btn-secondary:hover:not(:disabled) { background: var(--accent); color: var(--foreground); }
 
   /* ── States ── */
   .screen { display: none; }
@@ -197,8 +215,8 @@
   }
   .spinner {
     width: 40px; height: 40px;
-    border: 3px solid var(--gray-200);
-    border-top-color: var(--green);
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin .8s linear infinite;
     margin: 0 auto 16px;
@@ -222,16 +240,17 @@
   }
   .success-icon {
     width: 72px; height: 72px;
-    background: var(--green-light);
+    background: var(--secondary);
+    border: 1px solid var(--border);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 36px;
+    font-size: 32px;
     margin: 0 auto 20px;
   }
   .success-wrap h2 {
     font-size: 22px;
     font-weight: 700;
-    color: var(--green);
+    color: var(--foreground);
     margin-bottom: 6px;
   }
   .success-wrap p {
@@ -242,19 +261,19 @@
   }
   .ticket-badge {
     display: inline-block;
-    background: var(--green);
-    color: white;
-    font-size: 18px;
-    font-weight: 700;
-    padding: 10px 24px;
-    border-radius: 8px;
-    letter-spacing: 1px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-size: 16px;
+    font-weight: 600;
+    padding: 8px 20px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
     margin-bottom: 20px;
   }
   .ticket-details {
-    background: var(--gray-50);
-    border: 1px solid var(--gray-200);
-    border-radius: 10px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 8px;
     padding: 14px 16px;
     text-align: left;
     margin-bottom: 20px;
@@ -296,8 +315,9 @@
   .step-dot {
     width: 26px; height: 26px;
     border-radius: 50%;
-    background: var(--gray-200);
-    color: var(--gray-400);
+    background: var(--background);
+    border: 1px solid var(--border);
+    color: var(--muted-foreground);
     font-size: 11px;
     font-weight: 700;
     display: flex; align-items: center; justify-content: center;
@@ -305,8 +325,8 @@
     position: relative; z-index: 1;
     transition: all .2s;
   }
-  .step.active .step-dot  { background: var(--green); color: white; }
-  .step.done .step-dot    { background: var(--green-mid); color: white; }
+  .step.active .step-dot  { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+  .step.done .step-dot    { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
   .step.active::after,
   .step.done::after       { background: var(--green-mid); }
   .step-label {
@@ -314,8 +334,8 @@
     color: var(--gray-400);
     font-weight: 500;
   }
-  .step.active .step-label { color: var(--green); }
-  .step.done .step-label   { color: var(--green-mid); }
+  .step.active .step-label { color: var(--foreground); font-weight: 600; }
+  .step.done .step-label   { color: var(--foreground); }
 </style>
 </head>
 <body>
@@ -419,8 +439,8 @@
     <div class="summary">
       <div class="summary-row"><span>Dealer</span><span id="conf-dealer">—</span></div>
       <div class="summary-row"><span>Service Center</span><span id="conf-sc">—</span></div>
-      <div style="border-top: 1.5px solid #B7DFC7; margin-top: 12px; padding-top: 12px;">
-        <strong id="conf-items-title" style="font-size: 12px; font-weight: 600; color: var(--green); display: block; margin-bottom: 8px; text-transform: uppercase;">Items</strong>
+      <div style="border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px;">
+        <strong id="conf-items-title" style="font-size: 12px; font-weight: 600; color: var(--foreground); display: block; margin-bottom: 8px; text-transform: uppercase;">Items</strong>
         <div id="conf-items-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
       </div>
     </div>
@@ -790,7 +810,7 @@ function goConfirm() {
     itemRow.style.justify = 'space-between';
     itemRow.style.fontSize = '13px';
     itemRow.style.padding = '4px 0';
-    itemRow.style.borderBottom = i < items.length - 1 ? '1px dashed rgba(26, 107, 60, 0.15)' : 'none';
+    itemRow.style.borderBottom = i < items.length - 1 ? '1px dashed var(--border)' : 'none';
     
     itemRow.innerHTML = `
       <span style="color: var(--gray-600);">${i + 1}. ${item.cat} — <strong>${item.mod}</strong></span>
