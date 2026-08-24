@@ -25,7 +25,10 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const cleanPhone = phone.replace(/\D/g, '').replace(/^0+/, ''); // clean phone string
+    let cleanPhone = phone.replace(/\D/g, '').replace(/^0+/, ''); // clean phone string
+    if (cleanPhone.startsWith('966')) {
+      cleanPhone = cleanPhone.substring(3);
+    }
 
     const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
     const privateKey = process.env.GOOGLE_PRIVATE_KEY;
@@ -50,7 +53,7 @@ module.exports = async (req, res) => {
     // Read the sheet data
     const readRes = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: 'A:I', 
+      range: 'DealerMaster!A:I', 
     });
 
     const rows = readRes.data.values || [];
@@ -63,9 +66,12 @@ module.exports = async (req, res) => {
     // Skip header row
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
-      const mobilenumber = String(row[2] || '').replace(/\D/g, '').replace(/^0+/, '');
+      let mobilenumber = String(row[2] || '').replace(/\D/g, '').replace(/^0+/, '');
+      if (mobilenumber.startsWith('966')) {
+        mobilenumber = mobilenumber.substring(3);
+      }
       
-      if (mobilenumber === cleanPhone) {
+      if (mobilenumber === cleanPhone && cleanPhone.length >= 7) {
         foundDealer = {
           dealerid: row[0] || '',
           dealername: row[1] || '',
@@ -83,16 +89,18 @@ module.exports = async (req, res) => {
 
     if (foundDealer) {
       return res.status(200).json({
+        registered: true,
         exists: true,
         dealerid: foundDealer.dealerid,
         dealername: foundDealer.dealername,
         region: foundDealer.region,
         subregion: foundDealer.subregion,
+        locationgps: foundDealer.locationgps,
         servicecenter: foundDealer.servicecenter,
         status: foundDealer.status
       });
     } else {
-      return res.status(200).json({ exists: false });
+      return res.status(200).json({ registered: false, exists: false });
     }
   } catch (err) {
     console.error('Error checking dealer:', err);

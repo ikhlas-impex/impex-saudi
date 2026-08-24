@@ -46,7 +46,9 @@ module.exports = async (req, res) => {
   try {
     // 2. Look up dealer info from DealerMaster via n8n webhook
     const cleanPhone = phone.replace(/\D/g, '');
-    const checkRes = await fetch(CHECK_URL, {
+    const protocol = req.headers['x-forwarded-proto'] || 'http';
+    const baseUrl = `${protocol}://${req.headers.host}`;
+    const checkRes = await fetch(`${baseUrl}/api/dealer/check`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'check', phone: cleanPhone })
