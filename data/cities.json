@@ -1,0 +1,151 @@
+{
+  "Riyadh Province": [
+    "Riyadh",
+    "Diriyah",
+    "Al-Kharj",
+    "Dawadmi",
+    "Al Majma'ah",
+    "Al-Quway'iyah",
+    "Wadi ad-Dawasir",
+    "Al Aflaj",
+    "Al Zulfi",
+    "Shaqra",
+    "Howtat Bani Tamim",
+    "Afif",
+    "As Sulayyil",
+    "Dhurma",
+    "Al-Muzahmiyya",
+    "Rumaah",
+    "Thadiq",
+    "Huraymila",
+    "Al Hariq",
+    "Al-Ghat"
+  ],
+  "Makkah Province": [
+    "Mecca",
+    "Jeddah",
+    "Ta'if",
+    "Al Qunfudhah",
+    "Al Lith",
+    "Rabigh",
+    "Al Jumum",
+    "Khulais",
+    "Al Kamil",
+    "Al Khurmah",
+    "Ranyah",
+    "Turubah",
+    "Al Muwayh",
+    "Adham",
+    "Maysaan",
+    "Bahrah"
+  ],
+  "Eastern Province": [
+    "Dammam",
+    "Al Ahsa",
+    "Hafar Al-Batin",
+    "Jubail",
+    "Qatif",
+    "Khobar",
+    "Khafji",
+    "Ras Tanura",
+    "Abqaiq",
+    "Al Nairyah",
+    "Qaryat al-Ulya",
+    "Dhahran"
+  ],
+  "Madinah Province": [
+    "Medina",
+    "Yanbu",
+    "Al-`Ula",
+    "Mahd adh Dhahab",
+    "Badr",
+    "Khaybar",
+    "Al Hinakiyah"
+  ],
+  "Al-Qassim Province": [
+    "Buraidah",
+    "Unaizah",
+    "Ar Rass",
+    "Al Mithnab",
+    "Al Bukayriyah",
+    "Al Badائع",
+    "As Nabhaniyah",
+    "Uyun AlJiwa",
+    "Riyadh Al Khabra",
+    "Ash Shimasiyah"
+  ],
+  "Hail Province": [
+    "Ha'il",
+    "Baqaa",
+    "Al Ghazalah",
+    "Al Shanan",
+    "Samaheer"
+  ],
+  "Tabuk Province": [
+    "Tabuk",
+    "Al Wajh",
+    "Duba",
+    "Tayma",
+    "Umluj",
+    "Haql"
+  ],
+  "Northern Borders Province": [
+    "Arar",
+    "Rafha",
+    "Turaif"
+  ],
+  "Jazan Province": [
+    "Jizan",
+    "Sabya",
+    "Abu Arish",
+    "Samtah",
+    "Al Harth",
+    "Damad",
+    "Al Reeth",
+    "Baish",
+    "Farasan",
+    "Ad Dair",
+    "Ahad al Masarihah",
+    "Al Edabi",
+    "Al Aridhah",
+    "Al Darb"
+  ],
+  "Najran Province": [
+    "Najran",
+    "Sharurah",
+    "Hubuna",
+    "Badr Al Janoub",
+    "Yadamah",
+    "Thar",
+    "Khubash",
+    "Al Kharkhir"
+  ],
+  "Al-Baha Province": [
+    "Al Baha",
+    "Baljurashi",
+    "Al Mandaq",
+    "Al Makhwah",
+    "Al Aqiq",
+    "Qilwah",
+    "Al Qara"
+  ],
+  "Al-Jouf Province": [
+    "Sakakah",
+    "Qurayyat",
+    "Dumat al-Jandal"
+  ],
+  "Asir Province": [
+    "Abha",
+    "Khamis Mushait",
+    "Bisha",
+    "Al-Namas",
+    "Mahayil",
+    "Sarat Abidah",
+    "Tathlith",
+    "Rojal Alma'a",
+    "Dhahran Al Janub",
+    "Balqarn",
+    "Bariq",
+    "Al Majardah"
+  ]
+}
