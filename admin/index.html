@@ -334,6 +334,7 @@
     <button class="tab-btn active" onclick="switchTab('tickets')">📋 Tickets</button>
     <button class="tab-btn" onclick="switchTab('dealers')">🏪 Dealers</button>
     <button class="tab-btn" onclick="switchTab('catalog')">📦 Catalog</button>
+    <button class="tab-btn" onclick="switchTab('service-centers')">📍 Regions</button>
   </div>
 
   <!-- Tickets Tab -->
@@ -505,6 +506,61 @@
     </div>
   </div>
 
+  <!-- Service Centers Tab -->
+  <div id="tab-service-centers" class="tab-pane">
+    <div style="display:flex; justify-content:space-between; margin-bottom:16px;">
+      <div>
+        <h3 style="font-size:18px; color:var(--gray-800);">Region & Service Center Manager</h3>
+        <p style="font-size:13px; color:var(--gray-600); margin-top:4px;">Manage Regions and Sub Regions mappings to Service Centers.</p>
+      </div>
+      <button class="btn btn-primary" onclick="saveServiceCentersToSheet()" id="btn-save-regions">💾 Save to Sheets</button>
+    </div>
+
+    <div class="catalog-layout" style="position:relative;">
+      <div id="regions-loading" class="loading-overlay">
+        <div class="spinner dark" style="width:30px; height:30px;"></div>
+      </div>
+      <div id="regions-error" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:var(--red); font-weight:bold; z-index:11;"></div>
+      
+      <!-- Regions Sidebar -->
+      <div class="catalog-sidebar">
+        <div class="catalog-header">
+          Regions (<span id="region-count">0</span>)
+        </div>
+        <div class="catalog-list" id="region-list">
+          <!-- Rendered via JS -->
+        </div>
+        <div style="padding:16px; border-top:1px solid var(--gray-200);">
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <input type="text" id="new-region-input" class="input-field" placeholder="New region name">
+            <button class="btn btn-primary" onclick="addRegion()">Add Region</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub Regions Main Area -->
+      <div class="catalog-main">
+        <div class="catalog-header">
+          Sub Regions for: <span id="current-region-name" style="color:var(--green)">Select a region</span>
+        </div>
+        <div class="catalog-list" id="subregion-list">
+          <div style="padding:20px; text-align:center; color:var(--gray-400);">
+            Select a region to view sub regions.
+          </div>
+        </div>
+        <div style="padding:16px; border-top:1px solid var(--gray-200);">
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="new-subregion-input" class="input-field" placeholder="New sub region (Place)" disabled style="flex:2;">
+            <select id="new-servicecenter-select" class="input-field" disabled style="flex:1;">
+               <option value="">Select Center...</option>
+            </select>
+            <button class="btn btn-primary" id="btn-add-subregion" onclick="addSubRegion()" disabled>Add Sub Region</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- Edit Modal -->
@@ -547,6 +603,11 @@ let catalogData = {};
 let selectedCategory = null;
 let currentEditType = '';
 let currentEditId = '';
+
+// Service Centers State
+let serviceCentersData = {};
+let selectedRegion = null;
+let uniqueServiceCenters = [];
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 async function fetchWithRetry(url, options, retries = 3) {
@@ -717,6 +778,8 @@ function switchTab(tabId) {
     loadCatalog();
   } else if (tabId === 'dealers') {
     loadDealers();
+  } else if (tabId === 'service-centers') {
+    loadServiceCenters();
   }
 }
 
@@ -1440,6 +1503,238 @@ function exportCatalog(catalogObj) {
   a.click();
   URL.revokeObjectURL(url);
   showToast('CSV downloaded. Please upload to Google Sheets.', 'success');
+}
+
+// ── Service Centers ───────────────────────────────────────────────────────
+async function loadServiceCenters() {
+  const loader = document.getElementById('regions-loading');
+  const errorEl = document.getElementById('regions-error');
+  
+  if (loader) loader.style.display = 'flex';
+  if (errorEl) errorEl.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/admin/service-centers');
+    const data = await res.json();
+    if (data.success) {
+      serviceCentersData = data.data;
+      extractUniqueServiceCenters();
+      renderRegions();
+      
+      // Clear selection
+      selectedRegion = null;
+      document.getElementById('current-region-name').textContent = 'Select a region';
+      document.getElementById('subregion-list').innerHTML = '<div style="padding:20px; text-align:center; color:var(--gray-400);">Select a region to view sub regions.</div>';
+      
+      document.getElementById('new-subregion-input').disabled = true;
+      document.getElementById('new-servicecenter-select').disabled = true;
+      document.getElementById('btn-add-subregion').disabled = true;
+    } else {
+      throw new Error(data.error || 'Failed to fetch');
+    }
+  } catch (err) {
+    if (errorEl) {
+      errorEl.textContent = 'Failed to load Service Centers';
+      errorEl.style.display = 'block';
+    }
+    showToast('Failed to load Service Centers', 'error');
+  } finally {
+    if (loader) loader.style.display = 'none';
+  }
+}
+
+function extractUniqueServiceCenters() {
+  const centers = new Set();
+  for (const region in serviceCentersData) {
+    serviceCentersData[region].forEach(item => {
+      if (item.serviceCenter) {
+        centers.add(item.serviceCenter.toUpperCase());
+      }
+    });
+  }
+  uniqueServiceCenters = Array.from(centers).sort();
+}
+
+function updateServiceCenterDropdown() {
+  const select = document.getElementById('new-servicecenter-select');
+  select.innerHTML = '<option value="">Select Center...</option>';
+  uniqueServiceCenters.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    select.appendChild(opt);
+  });
+}
+
+function renderRegions() {
+  const list = document.getElementById('region-list');
+  const count = document.getElementById('region-count');
+  
+  const regions = Object.keys(serviceCentersData).sort();
+  count.textContent = regions.length;
+  list.innerHTML = '';
+
+  if (regions.length === 0) {
+    list.innerHTML = '<div style="padding:16px; color:var(--gray-400); text-align:center;">No regions found.</div>';
+    return;
+  }
+
+  regions.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'catalog-item' + (r === selectedRegion ? ' active' : '');
+    div.onclick = () => selectRegion(r);
+
+    const titleSpan = document.createElement('span');
+    titleSpan.textContent = r;
+    div.appendChild(titleSpan);
+
+    const acts = document.createElement('div');
+    acts.className = 'item-actions';
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'catalog-item-btn';
+    delBtn.textContent = '🗑️';
+    delBtn.title = 'Delete Region';
+    delBtn.onclick = (e) => {
+      e.stopPropagation();
+      if(confirm(`Are you sure you want to delete Region "${r}"?`)) {
+        delete serviceCentersData[r];
+        if (selectedRegion === r) {
+          selectedRegion = null;
+          document.getElementById('current-region-name').textContent = 'Select a region';
+          document.getElementById('subregion-list').innerHTML = '<div style="padding:20px; text-align:center; color:var(--gray-400);">Select a region to view sub regions.</div>';
+          document.getElementById('new-subregion-input').disabled = true;
+          document.getElementById('new-servicecenter-select').disabled = true;
+          document.getElementById('btn-add-subregion').disabled = true;
+        }
+        renderRegions();
+        showToast(`Region "${r}" removed locally`, 'success');
+      }
+    };
+    acts.appendChild(delBtn);
+    div.appendChild(acts);
+    
+    list.appendChild(div);
+  });
+}
+
+function selectRegion(r) {
+  selectedRegion = r;
+  document.getElementById('current-region-name').textContent = r;
+  
+  // Enable inputs
+  document.getElementById('new-subregion-input').disabled = false;
+  document.getElementById('new-servicecenter-select').disabled = false;
+  document.getElementById('btn-add-subregion').disabled = false;
+  
+  updateServiceCenterDropdown();
+  renderRegions(); // To update active state
+  renderSubRegions(r);
+}
+
+function renderSubRegions(r) {
+  const list = document.getElementById('subregion-list');
+  const items = serviceCentersData[r] || [];
+  
+  list.innerHTML = '';
+  
+  if (items.length === 0) {
+    list.innerHTML = '<div style="padding:16px; color:var(--gray-400); text-align:center;">No sub regions added yet.</div>';
+    return;
+  }
+
+  items.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'catalog-item';
+    
+    const span = document.createElement('span');
+    span.textContent = `${item.subRegion} (Center: ${item.serviceCenter})`;
+    div.appendChild(span);
+    
+    const acts = document.createElement('div');
+    acts.className = 'item-actions';
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'catalog-item-btn';
+    delBtn.textContent = '🗑️';
+    delBtn.title = 'Delete Sub Region';
+    delBtn.onclick = () => {
+      serviceCentersData[r].splice(idx, 1);
+      renderSubRegions(r);
+      showToast('Sub region removed locally', 'success');
+    };
+    acts.appendChild(delBtn);
+    
+    div.appendChild(acts);
+    list.appendChild(div);
+  });
+}
+
+function addRegion() {
+  const input = document.getElementById('new-region-input');
+  const r = input.value.trim();
+  
+  if (!r) return showToast('Region name required', 'error');
+  if (serviceCentersData[r]) return showToast('Region already exists', 'error');
+  
+  serviceCentersData[r] = [];
+  input.value = '';
+  renderRegions();
+  selectRegion(r);
+  showToast(`Region "${r}" added locally`, 'success');
+}
+
+function addSubRegion() {
+  if (!selectedRegion) return;
+  
+  const srInput = document.getElementById('new-subregion-input');
+  const scSelect = document.getElementById('new-servicecenter-select');
+  
+  const subRegion = srInput.value.trim();
+  const serviceCenter = scSelect.value;
+  
+  if (!subRegion || !serviceCenter) {
+    return showToast('Both sub region and service center are required', 'error');
+  }
+  
+  // Check if exists
+  const exists = serviceCentersData[selectedRegion].some(i => i.subRegion.toLowerCase() === subRegion.toLowerCase());
+  if (exists) return showToast('Sub region already exists in this region', 'error');
+  
+  serviceCentersData[selectedRegion].push({ subRegion, serviceCenter });
+  srInput.value = '';
+  scSelect.value = '';
+  
+  renderSubRegions(selectedRegion);
+  showToast('Sub region added locally', 'success');
+}
+
+async function saveServiceCentersToSheet() {
+  const btn = document.getElementById('btn-save-regions');
+  const oldText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  
+  try {
+    const res = await fetch('/api/admin/service-centers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: serviceCentersData })
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      showToast('Service Centers successfully saved to Google Sheets', 'success');
+    } else {
+      throw new Error(data.error || 'Failed to save');
+    }
+  } catch (err) {
+    console.error(err);
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
 }
 
 // ── Start ────────────────────────────────────────────────────────────────
