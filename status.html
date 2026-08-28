@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>IMPEX — Ticket Status</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --background: #ffffff;
+    --foreground: #09090b;
+    --primary:    #18181b;
+    --primary-foreground: #fafafa;
+    --secondary:  #f4f4f5;
+    --secondary-foreground: #18181b;
+    --muted:      #f4f4f5;
+    --muted-foreground: #71717a;
+    --border:     #e4e4e7;
+    --input:      #e4e4e7;
+    --ring:       #18181b;
+    --radius:     8px;
+
+    /* Status Colors */
+    --pending-bg: #ffe4e4;
+    --pending-fg: #b84c4c;
+    --inprogress-bg: #e0f2f1;
+    --inprogress-fg: #2d7a74;
+    --completed-bg: #e8f5e9;
+    --completed-fg: #3b8e40;
+    --cancelled-bg: var(--muted);
+    --cancelled-fg: var(--muted-foreground);
+    
+    --shadow:     0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--background);
+    min-height: 100vh;
+    color: var(--foreground);
+    padding-bottom: 40px;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--background);
+    color: var(--foreground);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    text-align: center;
+  }
+  .header-logo {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -.5px;
+    margin-bottom: 2px;
+  }
+  .header-sub {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    font-weight: 400;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin: 16px 16px 0;
+    padding: 20px;
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--foreground);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── Form ── */
+  .input-field {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--input);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    color: var(--foreground);
+    background: var(--background);
+    outline: none;
+    transition: box-shadow .15s;
+    margin-bottom: 12px;
+  }
+  .input-field:focus {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  /* ── Button ── */
+  .btn {
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  .btn-primary:hover:not(:disabled) { opacity: 0.9; }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--background);
+    color: var(--foreground);
+    border: 1px solid var(--input);
+    margin-top: 10px;
+  }
+  .btn-secondary:hover:not(:disabled) { background: var(--secondary); color: var(--foreground); }
+
+  /* ── States ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── Loading ── */
+  .loading-wrap {
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-wrap p { color: var(--muted-foreground); font-size: 14px; }
+
+  /* ── Error ── */
+  .error-wrap {
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .error-icon { font-size: 48px; margin-bottom: 12px; }
+  .error-wrap h2 { font-size: 18px; margin-bottom: 8px; color: #ef4444; }
+  .error-wrap p  { color: var(--muted-foreground); font-size: 14px; line-height: 1.5; }
+
+  /* ── Ticket Cards ── */
+  .ticket-card {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin: 16px 16px 0;
+    box-shadow: var(--shadow);
+  }
+  .ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .ticket-date {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    font-weight: 500;
+  }
+  .badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge.pending { background: var(--pending-bg); color: var(--pending-fg); }
+  .badge.in-progress { background: var(--inprogress-bg); color: var(--inprogress-fg); }
+  .badge.completed { background: var(--completed-bg); color: var(--completed-fg); }
+  .badge.cancelled { background: var(--cancelled-bg); color: var(--cancelled-fg); }
+
+  .ticket-sc {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+
+  .ticket-items {
+    background: var(--muted);
+    border-radius: 6px;
+    padding: 12px;
+  }
+  
+  .ticket-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .ticket-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .ticket-item-id {
+    font-size: 11px;
+    color: var(--muted-foreground);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .ticket-item-name {
+    font-weight: 500;
+    color: var(--foreground);
+  }
+  .ticket-item-qty {
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .empty-state h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  .empty-state p {
+    font-size: 14px;
+    color: var(--muted-foreground);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">🏪 IMPEX Service</div>
+  <div class="header-sub">Ticket Status</div>
+</div>
+
+<!-- ── SCREEN: Loading ── -->
+<div id="screen-loading" class="screen active">
+  <div class="loading-wrap">
+    <div class="spinner"></div>
+    <p>Loading your tickets…</p>
+  </div>
+</div>
+
+<!-- ── SCREEN: Error ── -->
+<div id="screen-error" class="screen">
+  <div class="card error-wrap">
+    <div class="error-icon">⚠️</div>
+    <h2>Something went wrong</h2>
+    <p id="error-msg">Unable to load ticket information. Please try again.</p>
+    <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 16px;">Try Again</button>
+  </div>
+</div>
+
+<!-- ── SCREEN: Manual Phone Entry ── -->
+<div id="screen-manual" class="screen">
+  <div class="card" style="margin-top:40px">
+    <div class="card-title">🔍 Check Ticket Status</div>
+    <p style="font-size: 13px; color: var(--muted-foreground); margin-bottom: 16px;">
+      Enter your WhatsApp phone number to check the status of your pickup requests.
+    </p>
+    <form id="phone-form" onsubmit="handlePhoneSubmit(event)">
+      <input type="tel" id="input-phone" class="input-field" placeholder="Phone Number (e.g. 0541234567)" required>
+      <button type="submit" class="btn btn-primary">Lookup Tickets</button>
+    </form>
+  </div>
+</div>
+
+<!-- ── SCREEN: Results ── -->
+<div id="screen-results" class="screen">
+  <div style="padding: 16px 16px 0; display: flex; justify-content: space-between; align-items: center;">
+    <h2 style="font-size: 16px; font-weight: 600;">Your Requests</h2>
+    <a id="btn-whatsapp-top" href="https://wa.me/966541463161" style="font-size: 12px; color: #25D366; text-decoration: none; font-weight: 600;">↩ WhatsApp</a>
+  </div>
+  
+  <div id="tickets-container">
+    <!-- Rendered via JS -->
+  </div>
+</div>
+
+<!-- ── SCREEN: Empty ── -->
+<div id="screen-empty" class="screen">
+  <div class="card empty-state">
+    <div style="font-size: 48px; margin-bottom: 12px;">📭</div>
+    <h3>No Requests Found</h3>
+    <p>We couldn't find any pickup requests associated with this number.</p>
+    
+    <a id="btn-create-pickup" href="/" class="btn btn-primary" style="text-decoration:none; margin-bottom: 12px;">
+      Create Pickup Request
+    </a>
+    <a href="https://wa.me/966541463161" class="btn btn-secondary" style="text-decoration:none;">
+      ↩ Return to WhatsApp
+    </a>
+  </div>
+</div>
+
+<script>
+// ── Helpers ───────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function getBadgeClass(status) {
+  if (!status) return 'pending';
+  const s = status.toLowerCase();
+  if (s.includes('pending')) return 'pending';
+  if (s.includes('progress') || s.includes('assigned')) return 'in-progress';
+  if (s.includes('complete') || s.includes('resolved') || s.includes('closed')) return 'completed';
+  if (s.includes('cancel')) return 'cancelled';
+  return 'pending';
+}
+
+function renderTickets(tickets) {
+  const container = document.getElementById('tickets-container');
+  container.innerHTML = '';
+  
+  tickets.forEach(group => {
+    const card = document.createElement('div');
+    card.className = 'ticket-card';
+    
+    let itemsHtml = '';
+    group.items.forEach(item => {
+      itemsHtml += `
+        <div class="ticket-item">
+          <div>
+            <span class="ticket-item-id">#${item.ticketno || 'Pending'}</span>
+            <span class="ticket-item-name">${item.product || 'Unknown Product'}</span>
+          </div>
+          <span class="ticket-item-qty">×${item.quantity || 1}</span>
+        </div>
+      `;
+    });
+    
+    card.innerHTML = `
+      <div class="ticket-header">
+        <span class="ticket-date">${group.date || group.createdat || 'Recent'}</span>
+        <span class="badge ${getBadgeClass(group.status)}">${group.status || 'Pending'}</span>
+      </div>
+      <div class="ticket-sc">
+        📍 ${group.servicecenter || 'Service Center Pending'}
+      </div>
+      <div class="ticket-items">
+        ${itemsHtml}
+      </div>
+    `;
+    
+    container.appendChild(card);
+  });
+}
+
+async function loadTickets(phone) {
+  showScreen('screen-loading');
+  
+  try {
+    const res = await fetch('/api/status/lookup?phone=' + encodeURIComponent(phone));
+    if (!res.ok) throw new Error('API request failed');
+    const data = await res.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to lookup tickets');
+    }
+    
+    if (!data.tickets || data.tickets.length === 0) {
+      document.getElementById('btn-create-pickup').href = '/?phone=' + encodeURIComponent(phone);
+      showScreen('screen-empty');
+    } else {
+      renderTickets(data.tickets);
+      showScreen('screen-results');
+    }
+    
+  } catch (err) {
+    console.error('Lookup error:', err);
+    document.getElementById('error-msg').textContent = 'Unable to load ticket information. Please try again.';
+    showScreen('screen-error');
+  }
+}
+
+function handlePhoneSubmit(e) {
+  e.preventDefault();
+  const phoneInput = document.getElementById('input-phone').value;
+  if (phoneInput) {
+    const url = new URL(window.location);
+    url.searchParams.set('phone', phoneInput);
+    window.history.pushState({}, '', url);
+    loadTickets(phoneInput);
+  }
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────
+function init() {
+  const params = new URLSearchParams(window.location.search);
+  const phone = params.get('phone');
+  
+  if (phone) {
+    loadTickets(phone);
+  } else {
+    showScreen('screen-manual');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
