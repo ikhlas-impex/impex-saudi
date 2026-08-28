@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/admin", "destination": "/admin/index.html" },
     { "source": "/admin/(.*)", "destination": "/admin/index.html" },
-    { "source": "/dealer-register", "destination": "/dealer-register.html" }
+    { "source": "/dealer-register", "destination": "/dealer-register.html" },
+    { "source": "/status", "destination": "/status.html" }
   ]
 }
