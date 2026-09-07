@@ -503,6 +503,21 @@
         <option value="Completed" data-i18n="stat_completed">Completed</option>
         <option value="Cancelled" data-i18n="badge_cancelled">Cancelled</option>
       </select>
+      
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="font-size:12px; color:var(--muted-foreground);" data-i18n="date_from">From Date</span>
+        <input type="date" id="filter-tickets-date-from" class="input-field" title="From Date">
+      </div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="font-size:12px; color:var(--muted-foreground);" data-i18n="date_to">To Date</span>
+        <input type="date" id="filter-tickets-date-to" class="input-field" title="To Date">
+      </div>
+
+      <select id="filter-tickets-sort" class="input-field" style="max-width:180px;">
+        <option value="desc" data-i18n="sort_desc">Newest First (Desc)</option>
+        <option value="asc" data-i18n="sort_asc">Oldest First (Asc)</option>
+      </select>
+
       <button class="btn btn-primary" onclick="loadTickets()" id="btn-refresh" data-i18n="refresh">
         Refresh
       </button>
@@ -559,6 +574,21 @@
         <option value="Active" data-i18n="active">Active</option>
         <option value="Inactive" data-i18n="inactive">Inactive</option>
       </select>
+
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="font-size:12px; color:var(--muted-foreground);" data-i18n="date_from">From Date</span>
+        <input type="date" id="filter-dealers-date-from" class="input-field" title="From Date">
+      </div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="font-size:12px; color:var(--muted-foreground);" data-i18n="date_to">To Date</span>
+        <input type="date" id="filter-dealers-date-to" class="input-field" title="To Date">
+      </div>
+
+      <select id="filter-dealers-sort" class="input-field" style="max-width:180px;">
+        <option value="desc" data-i18n="sort_desc">Newest First (Desc)</option>
+        <option value="asc" data-i18n="sort_asc">Oldest First (Asc)</option>
+      </select>
+
       <button class="btn btn-primary" onclick="loadDealers()" id="btn-refresh-dealers" data-i18n="refresh">
         Refresh
       </button>
@@ -992,10 +1022,59 @@ async function loadTickets() {
   }
 }
 
+function parseDateToTimestamp(dateStr) {
+  if (!dateStr) return 0;
+  const str = String(dateStr).trim();
+  if (!str) return 0;
+
+  // Standard Date parse
+  let timestamp = Date.parse(str);
+  if (!isNaN(timestamp)) return timestamp;
+
+  // Handle DD-MMM-YY or DD-MMM-YYYY format e.g. "18-Jul-26" or "18-Jul-2026"
+  const mmmMatch = /^(\d{1,2})[-/ ]([A-Za-z]{3})[-/ ](\d{2,4})$/.exec(str);
+  if (mmmMatch) {
+    const day = parseInt(mmmMatch[1], 10);
+    const monthStr = mmmMatch[2].toLowerCase();
+    let year = parseInt(mmmMatch[3], 10);
+    if (year < 100) year += 2000;
+
+    const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    const monthIdx = monthNames.indexOf(monthStr);
+    if (monthIdx !== -1) {
+      return new Date(year, monthIdx, day).getTime();
+    }
+  }
+
+  // Handle DD/MM/YYYY or YYYY/MM/DD
+  const parts = str.split(/[-/]/);
+  if (parts.length === 3) {
+    let y = parseInt(parts[0], 10);
+    let m = parseInt(parts[1], 10) - 1;
+    let d = parseInt(parts[2], 10);
+    if (y < 1000 && parts[2].length === 4) {
+      d = parseInt(parts[0], 10);
+      m = parseInt(parts[1], 10) - 1;
+      y = parseInt(parts[2], 10);
+    }
+    const dt = new Date(y, m, d);
+    if (!isNaN(dt.getTime())) return dt.getTime();
+  }
+
+  return 0;
+}
+
 function renderTickets() {
   const tbody = document.getElementById('tickets-tbody');
   const filterStatus = document.getElementById('filter-status').value;
   const searchQ = document.getElementById('search-tickets').value.toLowerCase();
+
+  const dateFromVal = document.getElementById('filter-tickets-date-from')?.value;
+  const dateToVal = document.getElementById('filter-tickets-date-to')?.value;
+  const sortOrder = document.getElementById('filter-tickets-sort')?.value || 'desc';
+
+  const fromTime = dateFromVal ? new Date(dateFromVal + 'T00:00:00').getTime() : null;
+  const toTime = dateToVal ? new Date(dateToVal + 'T23:59:59').getTime() : null;
   
   tbody.innerHTML = '';
   
@@ -1005,7 +1084,30 @@ function renderTickets() {
       const combined = `${t.ticketno} ${t.dealername} ${t.product} ${t.requestgroupid || ''}`.toLowerCase();
       if (!combined.includes(searchQ)) return false;
     }
+    
+    // Date Range Filtering
+    if (fromTime || toTime) {
+      const itemTime = parseDateToTimestamp(t.date || t.createdat);
+      if (itemTime > 0) {
+        if (fromTime && itemTime < fromTime) return false;
+        if (toTime && itemTime > toTime) return false;
+      }
+    }
+    
     return true;
+  });
+
+  // Sorting
+  filteredTickets.sort((a, b) => {
+    const timeA = parseDateToTimestamp(a.date || a.createdat);
+    const timeB = parseDateToTimestamp(b.date || b.createdat);
+    if (timeA !== timeB && timeA > 0 && timeB > 0) {
+      return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
+    }
+    // Fallback: Ticket ID sorting
+    return sortOrder === 'asc'
+      ? (a.ticketno || '').localeCompare(b.ticketno || '', undefined, { numeric: true })
+      : (b.ticketno || '').localeCompare(a.ticketno || '', undefined, { numeric: true });
   });
   
   if (filteredTickets.length === 0) {
@@ -1019,17 +1121,17 @@ function renderTickets() {
     const groupIndicator = hasGroup ? `<div style="font-size:10px;color:var(--green);font-weight:600;margin-top:2px;cursor:pointer;" onclick="filterByGroup('${t.requestgroupid}')" title="Click to view all items in this submission">🔗 Group</div>` : '';
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td style="font-weight:600">
+      <td style="font-weight:600" dir="ltr">
         ${t.ticketno}
         ${groupIndicator}
       </td>
-      <td>${t.date || t.createdat || ''}</td>
+      <td dir="ltr">${t.date || t.createdat || ''}</td>
       <td>
         <div style="font-weight:500">${t.dealername}</div>
-        <div style="font-size:12px;color:var(--gray-400)">${t.mobile || ''}</div>
+        <div style="font-size:12px;color:var(--gray-400)" dir="ltr">${t.mobile || ''}</div>
       </td>
       <td>${t.product}</td>
-      <td>${t.quantity}</td>
+      <td dir="ltr">${t.quantity}</td>
       <td>${t.servicecenter || ''}</td>
       <td><span class="badge ${statusClass}">${t.status}</span></td>
       <td>
@@ -1040,7 +1142,7 @@ function renderTickets() {
             <option value="Completed" ${t.status === 'Completed' ? 'selected' : ''}>Completed</option>
             <option value="Cancelled" ${t.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
           </select>
-          <button onclick="openEditTicket('${t.ticketno}')" style="padding:6px 10px; border:1px solid #E5E7EB; border-radius:6px; background:white; cursor:pointer; font-size:12px; color:#4B5563; white-space:nowrap;">
+          <button onclick="openEditTicket('${t.ticketno}')" style="padding:6px 10px; border:1px solid #E5E7EB; border-radius:6px; background:white; cursor:pointer; font-size:12px; color:#4B5563; white-space:nowrap;" data-i18n="edit">
             ✏️ Edit
           </button>
         </div>
@@ -1064,8 +1166,13 @@ function updateStats() {
   document.getElementById('stat-completed').textContent = completed;
 }
 
-document.getElementById('filter-status').addEventListener('change', renderTickets);
-document.getElementById('search-tickets').addEventListener('input', renderTickets);
+['filter-status', 'search-tickets', 'filter-tickets-date-from', 'filter-tickets-date-to', 'filter-tickets-sort'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('change', renderTickets);
+    el.addEventListener('input', renderTickets);
+  }
+});
 
 function filterByGroup(groupId) {
   const searchInput = document.getElementById('search-tickets');
@@ -1157,8 +1264,13 @@ function exportTickets() {
 }
 
 // ── Dealer Filter Listeners ──────────────────────────────────────────────
-if (document.getElementById('filter-dealer-status')) document.getElementById('filter-dealer-status').addEventListener('change', renderDealers);
-if (document.getElementById('search-dealers')) document.getElementById('search-dealers').addEventListener('input', renderDealers);
+['filter-dealer-status', 'search-dealers', 'filter-dealers-date-from', 'filter-dealers-date-to', 'filter-dealers-sort'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('change', renderDealers);
+    el.addEventListener('input', renderDealers);
+  }
+});
 
 // ── Edit Modal Functions ──────────────────────────────────────────────────
 function openEditTicket(ticketno, currentProduct, currentQuantity, currentStatus) {
@@ -1334,6 +1446,13 @@ function renderDealers() {
   const searchEl = document.getElementById('search-dealers');
   const filterStatus = filterStatusEl ? filterStatusEl.value : '';
   const searchQ = searchEl ? searchEl.value.toLowerCase() : '';
+
+  const dateFromVal = document.getElementById('filter-dealers-date-from')?.value;
+  const dateToVal = document.getElementById('filter-dealers-date-to')?.value;
+  const sortOrder = document.getElementById('filter-dealers-sort')?.value || 'desc';
+
+  const fromTime = dateFromVal ? new Date(dateFromVal + 'T00:00:00').getTime() : null;
+  const toTime = dateToVal ? new Date(dateToVal + 'T23:59:59').getTime() : null;
   
   tbody.innerHTML = '';
   
@@ -1343,11 +1462,34 @@ function renderDealers() {
       const combined = `${d.dealerid || ''} ${d.dealername || ''} ${d.mobilenumber || ''} ${d.region || ''} ${d.subregion || ''} ${d.servicecenter || ''}`.toLowerCase();
       if (!combined.includes(searchQ)) return false;
     }
+    
+    // Date Range Filtering
+    if (fromTime || toTime) {
+      const itemTime = parseDateToTimestamp(d.registrationdate || d.createdat || d.date);
+      if (itemTime > 0) {
+        if (fromTime && itemTime < fromTime) return false;
+        if (toTime && itemTime > toTime) return false;
+      }
+    }
+
     return true;
+  });
+
+  // Sorting
+  filteredDealers.sort((a, b) => {
+    const timeA = parseDateToTimestamp(a.registrationdate || a.createdat || a.date);
+    const timeB = parseDateToTimestamp(b.registrationdate || b.createdat || b.date);
+    if (timeA !== timeB && timeA > 0 && timeB > 0) {
+      return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
+    }
+    // Fallback: Dealer ID sorting
+    return sortOrder === 'asc'
+      ? (a.dealerid || '').localeCompare(b.dealerid || '', undefined, { numeric: true })
+      : (b.dealerid || '').localeCompare(a.dealerid || '', undefined, { numeric: true });
   });
   
   if (filteredDealers.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-400);">No dealers found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--gray-400);">No dealers found.</td></tr>';
     return;
   }
   

@@ -149,7 +149,12 @@
       th_location: "Location",
       th_reg_date: "Registration Date",
       edit: "Edit",
-      no_location: "No location"
+      no_location: "No location",
+      date_from: "From Date",
+      date_to: "To Date",
+      sort_order: "Sort Order",
+      sort_desc: "Newest First (Desc)",
+      sort_asc: "Oldest First (Asc)"
     },
     ar: {
       // Switcher
@@ -292,7 +297,12 @@
       th_location: "الموقع",
       th_reg_date: "تاريخ التسجيل",
       edit: "تعديل",
-      no_location: "لا يوجد موقع"
+      no_location: "لا يوجد موقع",
+      date_from: "من تاريخ",
+      date_to: "إلى تاريخ",
+      sort_order: "الترتيب",
+      sort_desc: "الأحدث أولاً (تنازلي)",
+      sort_asc: "الأقدم أولاً (تصاعدي)"
     }
   };
 
