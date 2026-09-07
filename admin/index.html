@@ -279,10 +279,86 @@
   /* ── Filters ── */
   .filters-bar {
     display: flex;
-    gap: 16px;
+    gap: 12px;
+    align-items: center;
     margin-bottom: 24px;
+    position: relative;
   }
-  .filters-bar .input-field { max-width: 240px; }
+  .filters-bar .search-input { flex: 1; max-width: 320px; }
+
+  /* ── Filter Dropdown / Popover ── */
+  .filter-dropdown-container {
+    position: relative;
+  }
+  .filter-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 320px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+    padding: 18px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    animation: popoverFadeIn 0.15s ease-out;
+  }
+  [dir="rtl"] .filter-popover {
+    left: auto;
+    right: 0;
+  }
+  @keyframes popoverFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .filter-popover-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .btn-clear-filters {
+    background: none;
+    border: none;
+    color: var(--destructive);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-clear-filters:hover {
+    text-decoration: underline;
+  }
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .filter-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .filter-sublabel {
+    font-size: 11px;
+    color: var(--muted-foreground);
+    display: block;
+    margin-bottom: 3px;
+  }
+  .filter-active-badge {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    margin-left: 4px;
+  }
 
   /* ── Table ── */
   .table-container {
@@ -496,30 +572,57 @@
     </div>
 
     <div class="filters-bar">
-      <input type="text" id="search-tickets" class="input-field" placeholder="Search ID, Dealer, Product..." data-i18n-placeholder="search_tickets_placeholder">
-      <select id="filter-status" class="input-field">
-        <option value="" data-i18n="all_statuses">All Statuses</option>
-        <option value="Pending" data-i18n="stat_pending">Pending</option>
-        <option value="In Progress" data-i18n="stat_in_progress">In Progress</option>
-        <option value="Completed" data-i18n="stat_completed">Completed</option>
-        <option value="Cancelled" data-i18n="badge_cancelled">Cancelled</option>
-      </select>
+      <input type="text" id="search-tickets" class="input-field search-input" placeholder="Search ID, Dealer, Product..." data-i18n-placeholder="search_tickets_placeholder">
       
-      <div style="display:flex; align-items:center; gap:6px;">
-        <span style="font-size:12px; color:var(--muted-foreground);" data-i18n="date_from">From Date</span>
-        <input type="date" id="filter-tickets-date-from" class="input-field" title="From Date">
-      </div>
-      <div style="display:flex; align-items:center; gap:6px;">
-        <span style="font-size:12px; color:var(--muted-foreground);" data-i18n="date_to">To Date</span>
-        <input type="date" id="filter-tickets-date-to" class="input-field" title="To Date">
+      <div class="filter-dropdown-container">
+        <button type="button" class="btn btn-secondary filter-toggle-btn" onclick="toggleFilterPopover('tickets', event)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          <span data-i18n="filter_btn">Filter</span>
+          <span id="filter-tickets-badge" class="filter-active-badge" style="display:none;">0</span>
+        </button>
+        
+        <div id="filter-popover-tickets" class="filter-popover" style="display:none;" onclick="event.stopPropagation()">
+          <div class="filter-popover-header">
+            <span style="font-weight:600; font-size:13px; color:var(--foreground);" data-i18n="filter_options">Filter Options</span>
+            <button type="button" class="btn-clear-filters" onclick="resetFilters('tickets')" data-i18n="clear_all">Clear All</button>
+          </div>
+          
+          <div class="filter-group">
+            <label class="filter-label" data-i18n="th_status">Status</label>
+            <select id="filter-status" class="input-field">
+              <option value="" data-i18n="all_statuses">All Statuses</option>
+              <option value="Pending" data-i18n="stat_pending">Pending</option>
+              <option value="In Progress" data-i18n="stat_in_progress">In Progress</option>
+              <option value="Completed" data-i18n="stat_completed">Completed</option>
+              <option value="Cancelled" data-i18n="badge_cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" data-i18n="date_range">Date Range</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <div>
+                <span class="filter-sublabel" data-i18n="date_from">From Date</span>
+                <input type="date" id="filter-tickets-date-from" class="input-field" title="From Date">
+              </div>
+              <div>
+                <span class="filter-sublabel" data-i18n="date_to">To Date</span>
+                <input type="date" id="filter-tickets-date-to" class="input-field" title="To Date">
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" data-i18n="sort_order">Sort Order</label>
+            <select id="filter-tickets-sort" class="input-field">
+              <option value="desc" data-i18n="sort_desc">Newest First (Desc)</option>
+              <option value="asc" data-i18n="sort_asc">Oldest First (Asc)</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <select id="filter-tickets-sort" class="input-field" style="max-width:180px;">
-        <option value="desc" data-i18n="sort_desc">Newest First (Desc)</option>
-        <option value="asc" data-i18n="sort_asc">Oldest First (Asc)</option>
-      </select>
-
-      <button class="btn btn-primary" onclick="loadTickets()" id="btn-refresh" data-i18n="refresh">
+      <button class="btn btn-primary" onclick="loadTickets()" id="btn-refresh" data-i18n="refresh" style="margin-left:auto;">
         Refresh
       </button>
       <button class="btn btn-secondary" onclick="exportTickets()" id="btn-export-tickets" style="display:flex; align-items:center; gap:6px;" data-i18n="export_csv">
@@ -569,28 +672,55 @@
     </div>
 
     <div class="filters-bar">
-      <input type="text" id="search-dealers" class="input-field" placeholder="Search Dealer ID, Name, Phone, Region..." data-i18n-placeholder="search_dealers_placeholder">
-      <select id="filter-dealer-status" class="input-field">
-        <option value="" data-i18n="all_dealer_statuses">All Statuses</option>
-        <option value="Active" data-i18n="active">Active</option>
-        <option value="Inactive" data-i18n="inactive">Inactive</option>
-      </select>
+      <input type="text" id="search-dealers" class="input-field search-input" placeholder="Search Dealer ID, Name, Phone, Region..." data-i18n-placeholder="search_dealers_placeholder">
+      
+      <div class="filter-dropdown-container">
+        <button type="button" class="btn btn-secondary filter-toggle-btn" onclick="toggleFilterPopover('dealers', event)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          <span data-i18n="filter_btn">Filter</span>
+          <span id="filter-dealers-badge" class="filter-active-badge" style="display:none;">0</span>
+        </button>
 
-      <div style="display:flex; align-items:center; gap:6px;">
-        <span style="font-size:12px; color:var(--muted-foreground);" data-i18n="date_from">From Date</span>
-        <input type="date" id="filter-dealers-date-from" class="input-field" title="From Date">
+        <div id="filter-popover-dealers" class="filter-popover" style="display:none;" onclick="event.stopPropagation()">
+          <div class="filter-popover-header">
+            <span style="font-weight:600; font-size:13px; color:var(--foreground);" data-i18n="filter_options">Filter Options</span>
+            <button type="button" class="btn-clear-filters" onclick="resetFilters('dealers')" data-i18n="clear_all">Clear All</button>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" data-i18n="th_status">Status</label>
+            <select id="filter-dealer-status" class="input-field">
+              <option value="" data-i18n="all_dealer_statuses">All Statuses</option>
+              <option value="Active" data-i18n="active">Active</option>
+              <option value="Inactive" data-i18n="inactive">Inactive</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" data-i18n="date_range">Date Range</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <div>
+                <span class="filter-sublabel" data-i18n="date_from">From Date</span>
+                <input type="date" id="filter-dealers-date-from" class="input-field" title="From Date">
+              </div>
+              <div>
+                <span class="filter-sublabel" data-i18n="date_to">To Date</span>
+                <input type="date" id="filter-dealers-date-to" class="input-field" title="To Date">
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" data-i18n="sort_order">Sort Order</label>
+            <select id="filter-dealers-sort" class="input-field">
+              <option value="desc" data-i18n="sort_desc">Newest First (Desc)</option>
+              <option value="asc" data-i18n="sort_asc">Oldest First (Asc)</option>
+            </select>
+          </div>
+        </div>
       </div>
-      <div style="display:flex; align-items:center; gap:6px;">
-        <span style="font-size:12px; color:var(--muted-foreground);" data-i18n="date_to">To Date</span>
-        <input type="date" id="filter-dealers-date-to" class="input-field" title="To Date">
-      </div>
 
-      <select id="filter-dealers-sort" class="input-field" style="max-width:180px;">
-        <option value="desc" data-i18n="sort_desc">Newest First (Desc)</option>
-        <option value="asc" data-i18n="sort_asc">Oldest First (Asc)</option>
-      </select>
-
-      <button class="btn btn-primary" onclick="loadDealers()" id="btn-refresh-dealers" data-i18n="refresh">
+      <button class="btn btn-primary" onclick="loadDealers()" id="btn-refresh-dealers" data-i18n="refresh" style="margin-left:auto;">
         Refresh
       </button>
     </div>
@@ -1167,11 +1297,75 @@ function updateStats() {
   document.getElementById('stat-completed').textContent = completed;
 }
 
+// ── Filter Popover Functions ─────────────────────────────────────────────
+function toggleFilterPopover(tab, event) {
+  if (event) event.stopPropagation();
+  const popover = document.getElementById(`filter-popover-${tab}`);
+  if (!popover) return;
+  const isVisible = popover.style.display === 'flex';
+  
+  document.querySelectorAll('.filter-popover').forEach(el => el.style.display = 'none');
+  if (!isVisible) {
+    popover.style.display = 'flex';
+  }
+}
+
+function updateFilterBadges() {
+  // Tickets
+  const tStatus = document.getElementById('filter-status')?.value;
+  const tFrom = document.getElementById('filter-tickets-date-from')?.value;
+  const tTo = document.getElementById('filter-tickets-date-to')?.value;
+  let tCount = 0;
+  if (tStatus) tCount++;
+  if (tFrom || tTo) tCount++;
+  const tBadge = document.getElementById('filter-tickets-badge');
+  if (tBadge) {
+    tBadge.textContent = tCount;
+    tBadge.style.display = tCount > 0 ? 'inline-block' : 'none';
+  }
+
+  // Dealers
+  const dStatus = document.getElementById('filter-dealer-status')?.value;
+  const dFrom = document.getElementById('filter-dealers-date-from')?.value;
+  const dTo = document.getElementById('filter-dealers-date-to')?.value;
+  let dCount = 0;
+  if (dStatus) dCount++;
+  if (dFrom || dTo) dCount++;
+  const dBadge = document.getElementById('filter-dealers-badge');
+  if (dBadge) {
+    dBadge.textContent = dCount;
+    dBadge.style.display = dCount > 0 ? 'inline-block' : 'none';
+  }
+}
+
+function resetFilters(tab) {
+  if (tab === 'tickets') {
+    if (document.getElementById('filter-status')) document.getElementById('filter-status').value = '';
+    if (document.getElementById('filter-tickets-date-from')) document.getElementById('filter-tickets-date-from').value = '';
+    if (document.getElementById('filter-tickets-date-to')) document.getElementById('filter-tickets-date-to').value = '';
+    if (document.getElementById('filter-tickets-sort')) document.getElementById('filter-tickets-sort').value = 'desc';
+    renderTickets();
+  } else if (tab === 'dealers') {
+    if (document.getElementById('filter-dealer-status')) document.getElementById('filter-dealer-status').value = '';
+    if (document.getElementById('filter-dealers-date-from')) document.getElementById('filter-dealers-date-from').value = '';
+    if (document.getElementById('filter-dealers-date-to')) document.getElementById('filter-dealers-date-to').value = '';
+    if (document.getElementById('filter-dealers-sort')) document.getElementById('filter-dealers-sort').value = 'desc';
+    renderDealers();
+  }
+  updateFilterBadges();
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.filter-dropdown-container')) {
+    document.querySelectorAll('.filter-popover').forEach(el => el.style.display = 'none');
+  }
+});
+
 ['filter-status', 'search-tickets', 'filter-tickets-date-from', 'filter-tickets-date-to', 'filter-tickets-sort'].forEach(id => {
   const el = document.getElementById(id);
   if (el) {
-    el.addEventListener('change', renderTickets);
-    el.addEventListener('input', renderTickets);
+    el.addEventListener('change', () => { renderTickets(); updateFilterBadges(); });
+    el.addEventListener('input', () => { renderTickets(); updateFilterBadges(); });
   }
 });
 
@@ -1268,8 +1462,8 @@ function exportTickets() {
 ['filter-dealer-status', 'search-dealers', 'filter-dealers-date-from', 'filter-dealers-date-to', 'filter-dealers-sort'].forEach(id => {
   const el = document.getElementById(id);
   if (el) {
-    el.addEventListener('change', renderDealers);
-    el.addEventListener('input', renderDealers);
+    el.addEventListener('change', () => { renderDealers(); updateFilterBadges(); });
+    el.addEventListener('input', () => { renderDealers(); updateFilterBadges(); });
   }
 });
 

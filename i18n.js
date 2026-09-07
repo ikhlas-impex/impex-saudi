@@ -154,7 +154,11 @@
       date_to: "To Date",
       sort_order: "Sort Order",
       sort_desc: "Newest First (Desc)",
-      sort_asc: "Oldest First (Asc)"
+      sort_asc: "Oldest First (Asc)",
+      filter_btn: "Filter",
+      filter_options: "Filter Options",
+      clear_all: "Clear All",
+      date_range: "Date Range"
     },
     ar: {
       // Switcher
@@ -302,7 +306,11 @@
       date_to: "إلى تاريخ",
       sort_order: "الترتيب",
       sort_desc: "الأحدث أولاً (تنازلي)",
-      sort_asc: "الأقدم أولاً (تصاعدي)"
+      sort_asc: "الأقدم أولاً (تصاعدي)",
+      filter_btn: "تصفية",
+      filter_options: "خيارات التصفية",
+      clear_all: "مسح الكل",
+      date_range: "نطاق التاريخ"
     }
   };
 
