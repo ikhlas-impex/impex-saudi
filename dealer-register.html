@@ -260,11 +260,15 @@
     .detail-row span:last-child { color: var(--text-main); font-size: 14px; font-weight: 600; }
 
   </style>
+<script src="/i18n.js"></script>
 </head>
 <body>
 
 <div class="top-bar">
-  <div class="top-bar-title">Dealer Registration Portal</div>
+  <div style="max-width: 480px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+    <div class="top-bar-title" data-i18n="reg_portal_title">Dealer Registration Portal</div>
+    <div id="top-bar-lang-switcher"></div>
+  </div>
 </div>
 
 <div class="container">
@@ -274,7 +278,7 @@
     <div class="card">
       <div class="loading-wrap">
         <div class="spinner"></div>
-        <p id="loading-text" style="color:var(--text-muted); font-weight:500;">Verifying your status...</p>
+        <p id="loading-text" style="color:var(--text-muted); font-weight:500;" data-i18n="verifying_status">Verifying your status...</p>
       </div>
     </div>
   </div>
@@ -283,17 +287,17 @@
   <div id="screen-exists" class="screen">
     <div class="card">
       <div class="result-wrap">
-        <h2 class="result-title">Already Registered!</h2>
-        <p class="result-desc">We found an existing dealer account associated with this phone number.</p>
+        <h2 class="result-title" data-i18n="already_registered_title">Already Registered!</h2>
+        <p class="result-desc" data-i18n="already_registered_desc">We found an existing dealer account associated with this phone number.</p>
         
         <div class="detail-list">
-          <div class="detail-row"><span>Dealer ID</span><span id="exist-id">DLR---</span></div>
-          <div class="detail-row"><span>Dealer Name</span><span id="exist-name">—</span></div>
-          <div class="detail-row"><span>Service Center</span><span id="exist-sc">—</span></div>
-          <div class="detail-row"><span>Status</span><span style="color:var(--primary)">Active</span></div>
+          <div class="detail-row"><span data-i18n="dealer_id">Dealer ID</span><span id="exist-id" dir="ltr">DLR---</span></div>
+          <div class="detail-row"><span data-i18n="dealer_name">Dealer Name</span><span id="exist-name">—</span></div>
+          <div class="detail-row"><span data-i18n="service_center">Service Center</span><span id="exist-sc">—</span></div>
+          <div class="detail-row"><span data-i18n="status_label">Status</span><span style="color:var(--primary)" data-i18n="status_active">Active</span></div>
         </div>
 
-        <a href="https://wa.me/96654146316" class="btn-primary" style="display:block; text-align:center; text-decoration: none; box-sizing: border-box;">
+        <a href="https://wa.me/96654146316" class="btn-primary" style="display:block; text-align:center; text-decoration: none; box-sizing: border-box;" data-i18n="return_to_wa">
           Return to WhatsApp
         </a>
       </div>
@@ -303,52 +307,52 @@
   <!-- SCREEN: Registration Form -->
   <div id="screen-form" class="screen">
     <div class="card">
-      <div class="card-title">
+      <div class="card-title" data-i18n="dealer_details_title">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
         DEALER DETAILS
       </div>
       
       <div class="alert error" id="form-error">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        <span id="form-error-text">Please fill all fields.</span>
+        <span id="form-error-text" data-i18n="fill_all_fields">Please fill all fields.</span>
       </div>
 
       <div class="field">
-        <label class="field-label">Shop / Dealer Name <span class="req">*</span></label>
-        <input type="text" id="inp-name" placeholder="Enter your business name">
+        <label class="field-label" data-i18n="shop_name_label">Shop / Dealer Name <span class="req">*</span></label>
+        <input type="text" id="inp-name" placeholder="Enter your business name" data-i18n-placeholder="shop_name_placeholder">
       </div>
 
       <div class="field">
-        <label class="field-label">Region <span class="req">*</span></label>
+        <label class="field-label" data-i18n="region">Region <span class="req">*</span></label>
         <select id="sel-region" onchange="onRegionChange()">
-          <option value="">— Select Region —</option>
+          <option value="" data-i18n="select_region">— Select Region —</option>
         </select>
       </div>
 
       <div class="field">
-        <label class="field-label">City <span class="req">*</span></label>
+        <label class="field-label" data-i18n="city_label">City <span class="req">*</span></label>
         <select id="sel-city" disabled>
-          <option value="">— Select Region First —</option>
+          <option value="" data-i18n="select_region_first">— Select Region First —</option>
         </select>
       </div>
 
       <div class="field">
-        <label class="field-label">Location (Address or GPS)</label>
+        <label class="field-label" data-i18n="location_label">Location (Address or GPS)</label>
         
-        <input id="pac-input" class="controls" type="text" placeholder="Search for places..." style="display:none;" />
+        <input id="pac-input" class="controls" type="text" placeholder="Search for places..." style="display:none;" data-i18n-placeholder="search_places_placeholder" />
         <div id="map-container"></div>
         
         <div class="location-field-group">
-          <input type="text" id="inp-gps" placeholder="Coordinates will appear here" readonly>
+          <input type="text" id="inp-gps" placeholder="Coordinates will appear here" data-i18n-placeholder="gps_placeholder" readonly dir="ltr">
         </div>
 
-        <button type="button" class="btn-loc-action" id="btn-loc" onclick="initMapSelection()">
+        <button type="button" class="btn-loc-action" id="btn-loc" onclick="initMapSelection()" data-i18n="select_map_btn">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
           Select Location on Map
         </button>
       </div>
 
-      <button class="btn-primary" id="btn-submit" onclick="submitRegistration()">
+      <button class="btn-primary" id="btn-submit" onclick="submitRegistration()" data-i18n="register_btn">
         Register Dealer →
       </button>
     </div>
@@ -358,16 +362,16 @@
   <div id="screen-success" class="screen">
     <div class="card">
       <div class="result-wrap">
-        <h2 class="result-title">Registration Complete!</h2>
-        <p class="result-desc">Welcome to the IMPEX network. Your details have been saved securely.</p>
+        <h2 class="result-title" data-i18n="reg_complete_title">Registration Complete!</h2>
+        <p class="result-desc" data-i18n="reg_complete_desc">Welcome to the IMPEX network. Your details have been saved securely.</p>
         
         <div class="detail-list">
-          <div class="detail-row"><span>Dealer ID</span><span id="suc-id">DLR---</span></div>
-          <div class="detail-row"><span>Dealer Name</span><span id="suc-name">—</span></div>
-          <div class="detail-row"><span>Service Center</span><span id="suc-sc">—</span></div>
+          <div class="detail-row"><span data-i18n="dealer_id">Dealer ID</span><span id="suc-id" dir="ltr">DLR---</span></div>
+          <div class="detail-row"><span data-i18n="dealer_name">Dealer Name</span><span id="suc-name">—</span></div>
+          <div class="detail-row"><span data-i18n="service_center">Service Center</span><span id="suc-sc">—</span></div>
         </div>
         
-        <a href="https://wa.me/96654146316" class="btn-primary" style="display:block; text-align:center; text-decoration: none; margin-top: 24px; box-sizing: border-box;">
+        <a href="https://wa.me/96654146316" class="btn-primary" style="display:block; text-align:center; text-decoration: none; margin-top: 24px; box-sizing: border-box;" data-i18n="return_to_wa">
           Return to WhatsApp
         </a>
       </div>
@@ -413,6 +417,13 @@
   }
 
   async function init() {
+    if (window.IMPEX_i18n) {
+      IMPEX_i18n.renderSwitcher(document.getElementById('top-bar-lang-switcher'), { compact: true });
+      IMPEX_i18n.onChange(() => {
+        onRegionChange();
+      });
+    }
+
     // Start loading the map script in the background
     loadMapScript();
 
@@ -420,7 +431,7 @@
     phoneNumber = (params.get('phone') || '').replace(/\D/g, '');
 
     if (!phoneNumber) {
-      document.getElementById('loading-text').textContent = 'No phone number provided in URL.';
+      document.getElementById('loading-text').textContent = IMPEX_i18n ? IMPEX_i18n.t('error_no_phone') : 'No phone number provided in URL.';
       return;
     }
 
@@ -452,12 +463,16 @@
       }
     } catch (err) {
       console.error(err);
-      document.getElementById('loading-text').textContent = 'An error occurred. Please refresh or try again later.';
+      document.getElementById('loading-text').textContent = IMPEX_i18n ? IMPEX_i18n.t('error_connection') : 'An error occurred. Please refresh or try again later.';
     }
   }
 
   function populateRegions() {
     const sel = document.getElementById('sel-region');
+    const firstOpt = sel.options[0];
+    sel.innerHTML = '';
+    if (firstOpt) sel.appendChild(firstOpt);
+
     Object.keys(regionsData).sort().forEach(r => {
       const opt = document.createElement('option');
       opt.value = r;
@@ -469,16 +484,17 @@
   function onRegionChange() {
     const region = document.getElementById('sel-region').value;
     const citySel = document.getElementById('sel-city');
+    const t = IMPEX_i18n ? IMPEX_i18n.t : (k, f) => f;
     citySel.innerHTML = '';
     
     if (!region) {
-      citySel.innerHTML = '<option value="">— Select Region First —</option>';
+      citySel.innerHTML = `<option value="">${t('select_region_first')}</option>`;
       citySel.disabled = true;
       return;
     }
 
     const cities = citiesData[region] || [];
-    citySel.innerHTML = '<option value="">— Select City —</option>';
+    citySel.innerHTML = `<option value="">${t('select_city')}</option>`;
     cities.sort().forEach(c => {
       const opt = document.createElement('option');
       opt.value = c;

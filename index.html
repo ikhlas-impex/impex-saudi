@@ -337,19 +337,23 @@
   .step.active .step-label { color: var(--foreground); font-weight: 600; }
   .step.done .step-label   { color: var(--foreground); }
 </style>
+<script src="/i18n.js"></script>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-logo">🏪 IMPEX Service</div>
-  <div class="header-sub">Product Pickup Request</div>
+<div class="header" style="display:flex; justify-content:space-between; align-items:center;">
+  <div style="text-align: left;">
+    <div class="header-logo" data-i18n="header_title">🏪 IMPEX Service</div>
+    <div class="header-sub" data-i18n="header_subtitle">Product Pickup Request</div>
+  </div>
+  <div id="header-lang-switcher"></div>
 </div>
 
 <!-- ── SCREEN: Loading ── -->
 <div id="screen-loading" class="screen active">
   <div class="loading-wrap">
     <div class="spinner"></div>
-    <p>Loading your dealer details…</p>
+    <p data-i18n="loading_dealer">Loading your dealer details…</p>
   </div>
 </div>
 
@@ -357,8 +361,8 @@
 <div id="screen-error" class="screen">
   <div class="card error-wrap">
     <div class="error-icon">⚠️</div>
-    <h2>Something went wrong</h2>
-    <p id="error-msg">Unable to load dealer information. Please go back to WhatsApp and try again.</p>
+    <h2 data-i18n="error_title">Something went wrong</h2>
+    <p id="error-msg" data-i18n="error_no_dealer">Unable to load dealer information. Please go back to WhatsApp and try again.</p>
   </div>
 </div>
 
@@ -368,32 +372,32 @@
   <div class="steps">
     <div class="step active" id="step1">
       <div class="step-dot">1</div>
-      <div class="step-label">Product</div>
+      <div class="step-label" data-i18n="step_product">Product</div>
     </div>
     <div class="step" id="step2">
       <div class="step-dot">2</div>
-      <div class="step-label">Confirm</div>
+      <div class="step-label" data-i18n="step_confirm">Confirm</div>
     </div>
   </div>
 
   <!-- Dealer info -->
   <div class="card" style="margin-top:16px">
-    <div class="card-title">🏪 Dealer Info</div>
+    <div class="card-title" data-i18n="dealer_info_title">🏪 Dealer Info</div>
     <div class="dealer-grid">
       <div class="dealer-item">
-        <label>Dealer ID</label>
-        <span id="info-dealerid">—</span>
+        <label data-i18n="dealer_id">Dealer ID</label>
+        <span id="info-dealerid" dir="ltr">—</span>
       </div>
       <div class="dealer-item">
-        <label>Name</label>
+        <label data-i18n="dealer_name">Name</label>
         <span id="info-name">—</span>
       </div>
       <div class="dealer-item">
-        <label>Region</label>
+        <label data-i18n="region">Region</label>
         <span id="info-region">—</span>
       </div>
       <div class="dealer-item">
-        <label>Service Center</label>
+        <label data-i18n="service_center">Service Center</label>
         <span id="info-sc">—</span>
       </div>
     </div>
@@ -401,7 +405,7 @@
 
   <!-- Product selection -->
   <div class="card" id="card-product">
-    <div class="card-title">📦 Select Product(s)</div>
+    <div class="card-title" data-i18n="select_products">📦 Select Product(s)</div>
     <div class="alert" id="form-error"></div>
 
     <!-- Product Rows Container -->
@@ -409,12 +413,12 @@
       <!-- Generated via JavaScript -->
     </div>
 
-    <button type="button" class="btn btn-secondary" id="btn-add-row" onclick="addProductRow()" style="margin-bottom: 16px; justify-content: center; display: inline-flex; width: auto; font-size: 14px; padding: 10px 16px; align-items: center; gap: 6px;">
+    <button type="button" class="btn btn-secondary" id="btn-add-row" onclick="addProductRow()" style="margin-bottom: 16px; justify-content: center; display: inline-flex; width: auto; font-size: 14px; padding: 10px 16px; align-items: center; gap: 6px;" data-i18n="add_another_product">
       ➕ Add another product
     </button>
-    <div id="row-count-helper" style="font-size: 12px; color: var(--gray-400); margin-bottom: 16px; font-weight: 500; text-align: center; display: none;"></div>
+    <div id="row-count-helper" style="font-size: 12px; color: var(--gray-400); margin-bottom: 16px; font-weight: 500; text-align: center; display: none;" data-i18n="max_items_reached"></div>
 
-    <button class="btn btn-primary" id="btn-next" onclick="goConfirm()" disabled>
+    <button class="btn btn-primary" id="btn-next" onclick="goConfirm()" disabled data-i18n="review_request">
       Review Request →
     </button>
   </div>
@@ -425,22 +429,22 @@
   <div class="steps">
     <div class="step done" id="cstep1">
       <div class="step-dot">✓</div>
-      <div class="step-label">Product</div>
+      <div class="step-label" data-i18n="step_product">Product</div>
     </div>
     <div class="step active" id="cstep2">
       <div class="step-dot">2</div>
-      <div class="step-label">Confirm</div>
+      <div class="step-label" data-i18n="step_confirm">Confirm</div>
     </div>
   </div>
 
   <div class="card" style="margin-top:16px">
-    <div class="card-title">✅ Confirm Your Request</div>
+    <div class="card-title" data-i18n="confirm_title">✅ Confirm Your Request</div>
 
     <div class="summary">
-      <div class="summary-row"><span>Dealer</span><span id="conf-dealer">—</span></div>
-      <div class="summary-row"><span>Service Center</span><span id="conf-sc">—</span></div>
+      <div class="summary-row"><span data-i18n="th_dealer">Dealer</span><span id="conf-dealer">—</span></div>
+      <div class="summary-row"><span data-i18n="service_center">Service Center</span><span id="conf-sc">—</span></div>
       <div style="border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px;">
-        <strong id="conf-items-title" style="font-size: 12px; font-weight: 600; color: var(--foreground); display: block; margin-bottom: 8px; text-transform: uppercase;">Items</strong>
+        <strong id="conf-items-title" style="font-size: 12px; font-weight: 600; color: var(--foreground); display: block; margin-bottom: 8px; text-transform: uppercase;" data-i18n="items">Items</strong>
         <div id="conf-items-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
       </div>
     </div>
@@ -448,9 +452,9 @@
     <div class="alert" id="confirm-error"></div>
 
     <button class="btn btn-primary" id="btn-submit" onclick="submitPickup()">
-      <span id="btn-submit-text">Confirm & Create Ticket</span>
+      <span id="btn-submit-text" data-i18n="confirm_btn">Confirm & Create Ticket</span>
     </button>
-    <button class="btn btn-secondary" onclick="goBack()">← Change Selection</button>
+    <button class="btn btn-secondary" onclick="goBack()" data-i18n="change_selection">← Change Selection</button>
   </div>
 </div>
 
@@ -459,26 +463,26 @@
   <div class="card" style="margin-top:16px">
     <div class="success-wrap">
       <div class="success-icon">✅</div>
-      <h2>Pickup Request Created!</h2>
-      <p>Your request has been submitted successfully. Our team will contact you within 24 hours.</p>
-      <div class="ticket-badge" id="success-ticketno">—</div>
+      <h2 data-i18n="success_title">Pickup Request Created!</h2>
+      <p data-i18n="success_msg">Your request has been submitted successfully. Our team will contact you within 24 hours.</p>
+      <div class="ticket-badge" id="success-ticketno" dir="ltr">—</div>
 
       <div class="ticket-details">
-        <div class="summary-row" id="suc-row-category"><span>Category</span><span id="suc-category">—</span></div>
-        <div class="summary-row" id="suc-row-model"><span>Model</span><span id="suc-model">—</span></div>
-        <div class="summary-row" id="suc-row-qty"><span>Quantity</span><span id="suc-qty">—</span></div>
-        <div class="summary-row"><span>Date</span><span id="suc-date">—</span></div>
-        <div class="summary-row"><span>Service Center</span><span id="suc-sc">—</span></div>
-        <div class="summary-row"><span>Status</span><span style="color:var(--amber);font-weight:700">Pending</span></div>
+        <div class="summary-row" id="suc-row-category"><span data-i18n="category">Category</span><span id="suc-category">—</span></div>
+        <div class="summary-row" id="suc-row-model"><span data-i18n="model">Model</span><span id="suc-model">—</span></div>
+        <div class="summary-row" id="suc-row-qty"><span data-i18n="quantity">Quantity</span><span id="suc-qty">—</span></div>
+        <div class="summary-row"><span data-i18n="th_date">Date</span><span id="suc-date">—</span></div>
+        <div class="summary-row"><span data-i18n="service_center">Service Center</span><span id="suc-sc">—</span></div>
+        <div class="summary-row"><span data-i18n="th_status">Status</span><span style="color:var(--amber);font-weight:700" data-i18n="badge_pending">Pending</span></div>
         
         <div id="suc-multi-container" style="border-top: 1px solid var(--gray-200); margin-top: 12px; padding-top: 12px; display: none;">
-          <strong style="font-size: 12px; color: var(--gray-600); display: block; margin-bottom: 8px; text-transform: uppercase;">Created Tickets:</strong>
+          <strong style="font-size: 12px; color: var(--gray-600); display: block; margin-bottom: 8px; text-transform: uppercase;" data-i18n="created_tickets">Created Tickets:</strong>
           <div id="suc-tickets-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
         </div>
       </div>
 
-      <p style="font-size:12px;color:var(--gray-400)">You can check your ticket status anytime by messaging us on WhatsApp.</p>
-      <a href="https://wa.me/966541463161" class="btn btn-whatsapp" style="background:#25D366;color:white;margin-top:20px;text-decoration:none;">
+      <p style="font-size:12px;color:var(--gray-400)" data-i18n="check_status_wa">You can check your ticket status anytime by messaging us on WhatsApp.</p>
+      <a href="https://wa.me/966541463161" class="btn btn-whatsapp" style="background:#25D366;color:white;margin-top:20px;text-decoration:none;" data-i18n="return_to_wa">
         ↩ Return to WhatsApp
       </a>
     </div>
@@ -533,11 +537,26 @@ async function fetchWithRetry(url, options, retries = 3) {
 
 // ── Init ─────────────────────────────────────────────────────────────────
 async function init() {
+  // Render Language Switcher in Header
+  if (window.IMPEX_i18n) {
+    IMPEX_i18n.renderSwitcher(document.getElementById('header-lang-switcher'), { compact: true });
+    IMPEX_i18n.onChange(() => {
+      // Re-number products text when language toggles
+      const rows = document.querySelectorAll('.product-row');
+      rows.forEach((row, i) => {
+        const label = row.querySelector('strong');
+        if (label) label.textContent = `${IMPEX_i18n.t('product_num')}${i + 1}`;
+        const removeBtn = row.querySelector('.btn-remove-row');
+        if (removeBtn) removeBtn.textContent = IMPEX_i18n.t('remove_product');
+      });
+    });
+  }
+
   const params = new URLSearchParams(window.location.search);
   phone = (params.get('phone') || '').replace(/\D/g, '');
 
   if (!phone) {
-    showError('No phone number provided. Please open this link from WhatsApp.');
+    showError(IMPEX_i18n ? IMPEX_i18n.t('error_no_phone') : 'No phone number provided. Please open this link from WhatsApp.');
     return;
   }
 
@@ -566,7 +585,9 @@ async function init() {
 
     // Check dealer
     if (!dealerData.registered) {
-      showError('Dealer not found for this phone number. <br/><br/><a href="/dealer-register.html?phone=' + encodeURIComponent(phone) + '" style="color:var(--primary);text-decoration:underline;font-weight:600;">Click here to register as a dealer</a>.');
+      const clickMsg = IMPEX_i18n ? IMPEX_i18n.t('click_to_register') : 'Click here to register as a dealer';
+      const noDealerMsg = IMPEX_i18n ? IMPEX_i18n.t('error_no_dealer') : 'Dealer not found for this phone number.';
+      showError(`${noDealerMsg}<br/><br/><a href="/dealer-register.html?phone=${encodeURIComponent(phone)}&lang=${IMPEX_i18n ? IMPEX_i18n.getLang() : 'en'}" style="color:var(--primary);text-decoration:underline;font-weight:600;">${clickMsg}</a>.`);
       return;
     }
 
@@ -616,7 +637,7 @@ async function init() {
     showScreen('screen-form');
 
   } catch(e) {
-    showError('Could not connect to the server. Please check your connection and try again.');
+    showError(IMPEX_i18n ? IMPEX_i18n.t('error_connection') : 'Could not connect to the server. Please check your connection and try again.');
   }
 }
 
@@ -630,27 +651,29 @@ function addProductRow() {
   const index = nextRowIndex++;
   activeRowIds.push(index);
 
+  const t = IMPEX_i18n ? IMPEX_i18n.t : (k, f) => f;
+
   const container = document.getElementById('product-rows-container');
   const rowHtml = `
     <div class="product-row" id="product-row-${index}" style="position: relative; border: 1.5px solid var(--gray-200); border-radius: 8px; padding: 16px; margin-bottom: 16px; background: var(--gray-50);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <strong style="font-size: 12px; color: var(--green); text-transform: uppercase; font-weight: 600;">Product #${activeRowIds.length}</strong>
-        <button type="button" class="btn-remove-row" onclick="removeProductRow(${index})" style="background: none; border: none; color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">✕ Remove</button>
+        <strong style="font-size: 12px; color: var(--green); text-transform: uppercase; font-weight: 600;">${t('product_num')}#${activeRowIds.length}</strong>
+        <button type="button" class="btn-remove-row" onclick="removeProductRow(${index})" style="background: none; border: none; color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">${t('remove_product')}</button>
       </div>
       <div class="field" style="margin-bottom: 12px;">
-        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;">Category <span class="req">*</span></label>
+        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;">${t('category')} <span class="req">*</span></label>
         <select class="sel-category-row" onchange="onCategoryChange(${index}, this.value)" style="padding: 10px 12px; font-size: 14px;">
-          <option value="">— Choose category —</option>
+          <option value="">${t('choose_category')}</option>
         </select>
       </div>
       <div class="field" style="margin-bottom: 12px;">
-        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;">Model <span class="req">*</span></label>
+        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;">${t('model')} <span class="req">*</span></label>
         <select class="sel-model-row" disabled onchange="validateRows()" style="padding: 10px 12px; font-size: 14px;">
-          <option value="">— Select category first —</option>
+          <option value="">${t('select_cat_first')}</option>
         </select>
       </div>
       <div class="field" style="margin-bottom: 0;">
-        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;">Quantity <span class="req">*</span></label>
+        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;">${t('quantity')} <span class="req">*</span></label>
         <input type="number" class="inp-qty-row" min="1" max="99" value="1" oninput="validateRows()" style="padding: 10px 12px; font-size: 14px;">
       </div>
     </div>
@@ -673,7 +696,7 @@ function addProductRow() {
   if (Object.keys(CATALOG).length === 0) {
     const opt = document.createElement('option');
     opt.value = '';
-    opt.textContent = 'Unable to load categories';
+    opt.textContent = t('unable_load_cat');
     catSel.appendChild(opt);
   }
 
@@ -691,11 +714,13 @@ function removeProductRow(index) {
 
   activeRowIds = activeRowIds.filter(id => id !== index);
 
+  const t = IMPEX_i18n ? IMPEX_i18n.t : (k, f) => f;
+
   // Re-number displays
   const rows = document.querySelectorAll('.product-row');
   rows.forEach((row, i) => {
     const label = row.querySelector('strong');
-    if (label) label.textContent = `Product #${i + 1}`;
+    if (label) label.textContent = `${t('product_num')}#${i + 1}`;
   });
 
   updateRowsUI();
@@ -706,18 +731,19 @@ function onCategoryChange(index, cat) {
   const rowEl = document.getElementById(`product-row-${index}`);
   if (!rowEl) return;
 
+  const t = IMPEX_i18n ? IMPEX_i18n.t : (k, f) => f;
   const modSel = rowEl.querySelector('.sel-model-row');
   modSel.innerHTML = '';
 
   if (!cat) {
-    modSel.innerHTML = '<option value="">— Select category first —</option>';
+    modSel.innerHTML = `<option value="">${t('select_cat_first')}</option>`;
     modSel.disabled = true;
     validateRows();
     return;
   }
 
   const models = CATALOG[cat] || [];
-  modSel.innerHTML = '<option value="">— Choose model —</option>';
+  modSel.innerHTML = `<option value="">${t('choose_model')}</option>`;
   models.forEach(m => {
     const opt = document.createElement('option');
     opt.value = m;
@@ -743,7 +769,6 @@ function updateRowsUI() {
     addBtn.disabled = true;
     addBtn.style.opacity = '0.5';
     addBtn.style.cursor = 'not-allowed';
-    helper.textContent = '10/10 items — maximum reached';
     helper.style.display = 'block';
   } else {
     addBtn.disabled = false;
