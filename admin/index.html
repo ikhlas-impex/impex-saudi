@@ -294,16 +294,18 @@
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
-    width: 320px;
+    width: 350px;
+    max-width: calc(100vw - 32px);
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 12px;
-    box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.15);
     padding: 18px;
     z-index: 100;
     display: flex;
     flex-direction: column;
     gap: 14px;
+    box-sizing: border-box;
     animation: popoverFadeIn 0.15s ease-out;
   }
   [dir="rtl"] .filter-popover {
@@ -343,6 +345,24 @@
     color: var(--muted-foreground);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+  }
+  .date-range-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .date-range-grid > div {
+    min-width: 0; /* Stops grid item overflow for date input */
+  }
+  .filter-popover input[type="date"] {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding: 8px 6px;
+    font-size: 12px;
+    box-sizing: border-box;
   }
   .filter-sublabel {
     font-size: 11px;
@@ -484,6 +504,101 @@
     display: none;
     border-radius: inherit;
   }
+
+  /* ── Responsive Mobile Styles ── */
+  @media (max-width: 768px) {
+    body {
+      padding: 12px;
+      align-items: flex-start;
+    }
+    .app-window {
+      height: auto;
+      min-height: 95vh;
+      flex-direction: column;
+      border-radius: 1rem;
+    }
+    .sidebar {
+      width: 100%;
+      padding: 16px 20px;
+      border-right: none;
+      border-bottom: 1px solid var(--sidebar-border);
+    }
+    .sidebar-logo {
+      margin-bottom: 16px;
+    }
+    .sidebar-nav {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tab-btn {
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    .sidebar-footer {
+      padding-top: 12px;
+      margin-top: 12px;
+    }
+    .top-bar {
+      padding: 20px 20px 12px;
+    }
+    .tab-pane {
+      padding: 12px 20px 24px;
+    }
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      padding: 16px;
+    }
+    .stat-value {
+      font-size: 24px;
+    }
+    .filters-bar {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .filters-bar .search-input {
+      max-width: 100%;
+      width: 100%;
+      flex: 1 1 100%;
+    }
+    .filter-popover {
+      width: calc(100vw - 48px);
+      max-width: 320px;
+      left: 0;
+    }
+    [dir="rtl"] .filter-popover {
+      right: 0;
+      left: auto;
+    }
+    .catalog-layout {
+      flex-direction: column;
+      height: auto;
+    }
+    .catalog-sidebar {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+    .date-range-grid {
+      grid-template-columns: 1fr;
+    }
+    .filter-popover {
+      width: calc(100vw - 32px);
+      left: -10px;
+    }
+    [dir="rtl"] .filter-popover {
+      right: -10px;
+      left: auto;
+    }
+  }
 </style>
 
 <script src="/i18n.js"></script>
@@ -600,7 +715,7 @@
 
           <div class="filter-group">
             <label class="filter-label" data-i18n="date_range">Date Range</label>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div class="date-range-grid">
               <div>
                 <span class="filter-sublabel" data-i18n="date_from">From Date</span>
                 <input type="date" id="filter-tickets-date-from" class="input-field" title="From Date">
@@ -698,7 +813,7 @@
 
           <div class="filter-group">
             <label class="filter-label" data-i18n="date_range">Date Range</label>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div class="date-range-grid">
               <div>
                 <span class="filter-sublabel" data-i18n="date_from">From Date</span>
                 <input type="date" id="filter-dealers-date-from" class="input-field" title="From Date">
