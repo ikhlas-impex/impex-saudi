@@ -331,9 +331,10 @@
 
       <div class="field">
         <label class="field-label" data-i18n="city_label">City <span class="req">*</span></label>
-        <select id="sel-city" disabled>
+        <select id="sel-city" onchange="onCityChange()" disabled>
           <option value="" data-i18n="select_region_first">— Select Region First —</option>
         </select>
+        <input type="text" id="inp-other-city" style="display:none; margin-top: 10px;" placeholder="Type your city name..." data-i18n-placeholder="other_city_placeholder">
       </div>
 
       <div class="field">
@@ -484,9 +485,15 @@
   function onRegionChange() {
     const region = document.getElementById('sel-region').value;
     const citySel = document.getElementById('sel-city');
+    const otherInp = document.getElementById('inp-other-city');
     const t = IMPEX_i18n ? IMPEX_i18n.t : (k, f) => f;
-    citySel.innerHTML = '';
     
+    citySel.innerHTML = '';
+    if (otherInp) {
+      otherInp.style.display = 'none';
+      otherInp.value = '';
+    }
+
     if (!region) {
       citySel.innerHTML = `<option value="">${t('select_region_first')}</option>`;
       citySel.disabled = true;
@@ -501,7 +508,27 @@
       opt.textContent = c;
       citySel.appendChild(opt);
     });
+
+    const otherOpt = document.createElement('option');
+    otherOpt.value = 'other';
+    otherOpt.textContent = t('other_city') || '+ Other (Enter manually)';
+    citySel.appendChild(otherOpt);
+
     citySel.disabled = false;
+  }
+
+  function onCityChange() {
+    const citySel = document.getElementById('sel-city');
+    const otherInp = document.getElementById('inp-other-city');
+    if (!otherInp) return;
+
+    if (citySel.value === 'other') {
+      otherInp.style.display = 'block';
+      otherInp.focus();
+    } else {
+      otherInp.style.display = 'none';
+      otherInp.value = '';
+    }
   }
 
   function initMapSelection() {
@@ -614,14 +641,23 @@
   async function submitRegistration() {
     const name = document.getElementById('inp-name').value.trim();
     const region = document.getElementById('sel-region').value;
-    const city = document.getElementById('sel-city').value;
+    const citySelVal = document.getElementById('sel-city').value;
+    let city = citySelVal;
+
+    if (citySelVal === 'other') {
+      city = document.getElementById('inp-other-city').value.trim();
+    }
+
     const gps = document.getElementById('inp-gps').value;
     const errEl = document.getElementById('form-error');
     const errText = document.getElementById('form-error-text');
     const btn = document.getElementById('btn-submit');
+    const t = IMPEX_i18n ? IMPEX_i18n.t : (k, f) => f;
 
-    if (!name || !region || !city) {
-      errText.textContent = 'Name, Region, and City are required.';
+    if (!name || !region || !citySelVal || (citySelVal === 'other' && !city)) {
+      errText.textContent = (!name || !region || !citySelVal)
+        ? t('fill_all_fields', 'Please fill all fields.')
+        : t('enter_city_error', 'Please enter your city name.');
       errEl.style.display = 'flex';
       return;
     }
