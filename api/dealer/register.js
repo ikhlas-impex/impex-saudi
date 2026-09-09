@@ -20,36 +20,31 @@ async function transliterateArabic(text) {
   return text; // Fallback to original text on failure
 }
 
-// Helper to send the WhatsApp confirmation using Interakt Template Message Send API
+// Helper to send the WhatsApp confirmation via n8n webhook
 async function sendDealerConfirmation({ phone, dealername, dealerid, servicecenter }) {
-  let digits = String(phone || '').replace(/\D/g, '').replace(/^0+/, '');
-  let countryCode = '966';
-  if (digits.length === 10) countryCode = '91';
-  else if (digits.length === 9) countryCode = '966';
+  const cleanPhone = String(phone || '').replace(/\D/g, '');
+  console.log('Sending WhatsApp registration confirmation via n8n webhook for dealer:', dealerid);
 
-  const bodyValues = [dealername, dealerid, servicecenter];
-  console.log('Sending WhatsApp confirmation with bodyValues:', bodyValues);
+  try {
+    const res = await fetch('https://n8n.srv1623198.hstgr.cloud/webhook/impex-register-confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dealerid: dealerid,
+        dealername: dealername,
+        servicecenter: servicecenter,
+        mobile: cleanPhone
+      })
+    });
 
-  const res = await fetch('https://api.interakt.ai/v1/public/message/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Basic ${process.env.INTERAKT_API_KEY}`,
-    },
-    body: JSON.stringify({
-      countryCode: '+' + countryCode,
-      phoneNumber: digits,
-      type: 'Template',
-      template: {
-        name: 'dealer_registration_confirmation',
-        languageCode: 'en',
-        bodyValues: bodyValues,
-      },
-    }),
-  });
-
-  if (!res.ok) {
-    console.error('dealer confirmation send failed', res.status, await res.text());
+    if (!res.ok) {
+      console.error('Dealer confirmation WhatsApp webhook failed:', res.status, await res.text());
+    } else {
+      const data = await res.json();
+      console.log('Registration WhatsApp confirmation sent successfully:', data);
+    }
+  } catch (err) {
+    console.error('Failed to trigger n8n WhatsApp registration webhook:', err.message);
   }
 }
 
