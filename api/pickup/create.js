@@ -25,6 +25,7 @@ module.exports = async (req, res) => {
   }
 
   const { dealerid, phone, items } = req.body || {};
+  const lang = (req.body && req.body.lang === 'ar') ? 'ar' : 'en';
 
   // 1. Validation
   if (!phone) {
@@ -215,6 +216,7 @@ module.exports = async (req, res) => {
         servicecenter: dealerData.servicecenter,
         date: formattedDate,
         requestgroupid: groupId,
+        lang: lang,
         items: ticketRows.map(r => ({
           ticketno: r.ticketno,
           product: r.product,

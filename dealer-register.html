@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>IMPEX — Dealer Registration</title>
+  <title data-i18n="page_title_register">IMPEX — Dealer Registration</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -404,7 +404,8 @@
       
       if (config.googleMapsApiKey) {
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${config.googleMapsApiKey}&libraries=places&callback=mapApiLoaded`;
+        const mapLang = window.IMPEX_i18n ? IMPEX_i18n.getLang() : 'en';
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${config.googleMapsApiKey}&libraries=places&language=${mapLang}&region=SA&callback=mapApiLoaded`;
         script.async = true;
         script.defer = true;
         document.head.appendChild(script);
@@ -421,7 +422,10 @@
     if (window.IMPEX_i18n) {
       IMPEX_i18n.renderSwitcher(document.getElementById('top-bar-lang-switcher'), { compact: true });
       IMPEX_i18n.onChange(() => {
-        onRegionChange();
+        populateRegions();
+        renderCities(true);
+        const btn = document.getElementById('btn-submit');
+        if (btn && !btn.disabled) btn.textContent = IMPEX_i18n.t('register_btn');
       });
     }
 
@@ -432,7 +436,7 @@
     phoneNumber = (params.get('phone') || '').replace(/\D/g, '');
 
     if (!phoneNumber) {
-      document.getElementById('loading-text').textContent = IMPEX_i18n ? IMPEX_i18n.t('error_no_phone') : 'No phone number provided in URL.';
+      IMPEX_i18n.setText(document.getElementById('loading-text'), 'error_no_phone');
       return;
     }
 
@@ -454,42 +458,51 @@
       citiesData = await cityRes.json();
 
       if (dealer.exists) {
-        document.getElementById('exist-id').textContent = dealer.dealerid;
-        document.getElementById('exist-name').textContent = dealer.dealername;
-        document.getElementById('exist-sc').textContent = dealer.servicecenter;
-        showScreen('screen-exists');
+        showExisting(dealer);
       } else {
         populateRegions();
         showScreen('screen-form');
       }
     } catch (err) {
       console.error(err);
-      document.getElementById('loading-text').textContent = IMPEX_i18n ? IMPEX_i18n.t('error_connection') : 'An error occurred. Please refresh or try again later.';
+      IMPEX_i18n.setText(document.getElementById('loading-text'), 'error_connection');
     }
+  }
+
+  // Option values stay in English (stored in the sheet); labels follow the language.
+  function sortedByLabel(values) {
+    const name = IMPEX_i18n.name;
+    const locale = IMPEX_i18n.getLang() === 'ar' ? 'ar' : 'en';
+    return values.slice().sort((a, b) => String(name(a)).localeCompare(String(name(b)), locale));
   }
 
   function populateRegions() {
     const sel = document.getElementById('sel-region');
-    const firstOpt = sel.options[0];
-    sel.innerHTML = '';
-    if (firstOpt) sel.appendChild(firstOpt);
+    const current = sel.value;
+    sel.innerHTML = `<option value="">${IMPEX_i18n.t('select_region')}</option>`;
 
-    Object.keys(regionsData).sort().forEach(r => {
+    sortedByLabel(Object.keys(regionsData)).forEach(r => {
       const opt = document.createElement('option');
       opt.value = r;
-      opt.textContent = r;
+      opt.textContent = IMPEX_i18n.name(r);
       sel.appendChild(opt);
     });
+    sel.value = current;
   }
 
   function onRegionChange() {
+    renderCities(false);
+  }
+
+  function renderCities(keepSelection) {
     const region = document.getElementById('sel-region').value;
     const citySel = document.getElementById('sel-city');
     const otherInp = document.getElementById('inp-other-city');
-    const t = IMPEX_i18n ? IMPEX_i18n.t : (k, f) => f;
-    
+    const t = IMPEX_i18n.t;
+    const previous = citySel.value;
+
     citySel.innerHTML = '';
-    if (otherInp) {
+    if (otherInp && !(keepSelection && previous === 'other')) {
       otherInp.style.display = 'none';
       otherInp.value = '';
     }
@@ -502,19 +515,20 @@
 
     const cities = citiesData[region] || [];
     citySel.innerHTML = `<option value="">${t('select_city')}</option>`;
-    cities.sort().forEach(c => {
+    sortedByLabel(cities).forEach(c => {
       const opt = document.createElement('option');
       opt.value = c;
-      opt.textContent = c;
+      opt.textContent = IMPEX_i18n.name(c);
       citySel.appendChild(opt);
     });
 
     const otherOpt = document.createElement('option');
     otherOpt.value = 'other';
-    otherOpt.textContent = t('other_city') || '+ Other (Enter manually)';
+    otherOpt.textContent = t('other_city');
     citySel.appendChild(otherOpt);
 
     citySel.disabled = false;
+    if (keepSelection) citySel.value = previous;
   }
 
   function onCityChange() {
@@ -533,11 +547,12 @@
 
   function initMapSelection() {
     if (!mapConfigured) {
-      alert("Google Maps API Key is not configured in Vercel Environment Variables. Please set GOOGLE_MAPS_API_KEY.");
+      console.warn('GOOGLE_MAPS_API_KEY is not configured.');
+      alert(IMPEX_i18n.t('maps_not_configured'));
       return;
     }
     if (!mapLoaded) {
-      alert("Google Maps API is still loading. Please try again in a few seconds.");
+      alert(IMPEX_i18n.t('maps_loading'));
       return;
     }
     
@@ -652,19 +667,17 @@
     const errEl = document.getElementById('form-error');
     const errText = document.getElementById('form-error-text');
     const btn = document.getElementById('btn-submit');
-    const t = IMPEX_i18n ? IMPEX_i18n.t : (k, f) => f;
+    const t = IMPEX_i18n.t;
 
     if (!name || !region || !citySelVal || (citySelVal === 'other' && !city)) {
-      errText.textContent = (!name || !region || !citySelVal)
-        ? t('fill_all_fields', 'Please fill all fields.')
-        : t('enter_city_error', 'Please enter your city name.');
+      IMPEX_i18n.setText(errText, (!name || !region || !citySelVal) ? 'fill_all_fields' : 'enter_city_error');
       errEl.style.display = 'flex';
       return;
     }
     errEl.style.display = 'none';
-    
+
     btn.disabled = true;
-    btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;margin:0;border-width:2px;display:inline-block;vertical-align:middle;margin-right:8px;border-top-color:white;"></div> Registering...';
+    btn.innerHTML = `<div class="spinner" style="width:20px;height:20px;margin:0;border-width:2px;display:inline-block;vertical-align:middle;margin-inline-end:8px;border-top-color:white;"></div> ${t('registering_btn')}`;
 
     try {
       const res = await fetch('/api/dealer/register', {
@@ -675,7 +688,8 @@
           dealername: name,
           region: region,
           subregion: city,
-          locationgps: gps
+          locationgps: gps,
+          lang: IMPEX_i18n.getLang()
         })
       });
 
@@ -683,28 +697,37 @@
 
       if (!res.ok) {
         if (res.status === 409 && data.dealer) {
-          document.getElementById('exist-id').textContent = data.dealer.dealerid;
-          document.getElementById('exist-name').textContent = data.dealer.dealername;
-          document.getElementById('exist-sc').textContent = data.dealer.servicecenter;
-          showScreen('screen-exists');
+          showExisting(data.dealer);
           return;
         }
-        throw new Error(data.error || 'Registration failed');
+        console.error('Registration error:', data.error, data.message);
+        IMPEX_i18n.setText(errText, 'reg_failed');
+        errEl.style.display = 'flex';
+        btn.disabled = false;
+        btn.textContent = t('register_btn');
+        return;
       }
 
-      // Success
+      // Success — show the name exactly as the dealer typed it
       document.getElementById('suc-id').textContent = data.dealerid;
-      document.getElementById('suc-name').textContent = data.dealername;
-      document.getElementById('suc-sc').textContent = data.servicecenter;
+      document.getElementById('suc-name').textContent = name;
+      IMPEX_i18n.setValue(document.getElementById('suc-sc'), data.servicecenter, '—');
       showScreen('screen-success');
 
     } catch (err) {
       console.error(err);
-      errText.textContent = err.message || 'Server error. Please try again.';
+      IMPEX_i18n.setText(errText, 'server_error');
       errEl.style.display = 'flex';
       btn.disabled = false;
-      btn.innerHTML = 'Register Dealer →';
+      btn.textContent = t('register_btn');
     }
+  }
+
+  function showExisting(d) {
+    document.getElementById('exist-id').textContent = d.dealerid || '—';
+    document.getElementById('exist-name').textContent = d.dealername || '—';
+    IMPEX_i18n.setValue(document.getElementById('exist-sc'), d.servicecenter, '—');
+    showScreen('screen-exists');
   }
 
   function showScreen(id) {

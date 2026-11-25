@@ -21,7 +21,7 @@ async function transliterateArabic(text) {
 }
 
 // Helper to send the WhatsApp confirmation via n8n webhook
-async function sendDealerConfirmation({ phone, dealername, dealerid, servicecenter }) {
+async function sendDealerConfirmation({ phone, dealername, dealerid, servicecenter, lang }) {
   const cleanPhone = String(phone || '').replace(/\D/g, '');
   console.log('Sending WhatsApp registration confirmation via n8n webhook for dealer:', dealerid);
 
@@ -33,7 +33,8 @@ async function sendDealerConfirmation({ phone, dealername, dealerid, servicecent
         dealerid: dealerid,
         dealername: dealername,
         servicecenter: servicecenter,
-        mobile: cleanPhone
+        mobile: cleanPhone,
+        lang: lang === 'ar' ? 'ar' : 'en'
       })
     });
 
@@ -66,7 +67,7 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
-  const { phone, dealername, region, subregion, locationgps } = req.body || {};
+  const { phone, dealername, region, subregion, locationgps, lang } = req.body || {};
 
   if (!phone || !dealername || !region || !subregion) {
     return res.status(400).json({ error: 'phone, dealername, region, subregion are required' });
@@ -197,7 +198,8 @@ module.exports = async (req, res) => {
       phone: cleanPhone,
       dealername: englishDealerName,
       dealerid: newDealerId,
-      servicecenter: resolvedSC
+      servicecenter: resolvedSC,
+      lang
     });
 
     // 7. Return success

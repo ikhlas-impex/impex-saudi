@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>IMPEX — Ticket Status</title>
+<title data-i18n="page_title_status">IMPEX — Ticket Status</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -365,7 +365,7 @@ function renderTickets(tickets) {
         <div class="ticket-item">
           <div>
             <span class="ticket-item-id" dir="ltr">#${item.ticketno || t('badge_pending')}</span>
-            <span class="ticket-item-name">${item.product || t('unknown_product')}</span>
+            <span class="ticket-item-name">${item.product ? IMPEX_i18n.name(item.product) : t('unknown_product')}</span>
           </div>
           <span class="ticket-item-qty" dir="ltr">×${item.quantity || 1}</span>
         </div>
@@ -378,7 +378,7 @@ function renderTickets(tickets) {
         <span class="badge ${getBadgeClass(group.status)}">${translateStatus(group.status)}</span>
       </div>
       <div class="ticket-sc">
-        📍 ${group.servicecenter || 'Service Center Pending'}
+        📍 ${group.servicecenter ? IMPEX_i18n.name(group.servicecenter) : t('sc_pending')}
       </div>
       <div class="ticket-items">
         ${itemsHtml}

@@ -161,7 +161,25 @@
       filter_btn: "Filter",
       filter_options: "Filter Options",
       clear_all: "Clear All",
-      date_range: "Date Range"
+      date_range: "Date Range",
+
+      // Shared dynamic messages
+      page_title_pickup: "IMPEX — Product Pickup Request",
+      page_title_register: "IMPEX — Dealer Registration",
+      page_title_status: "IMPEX — Ticket Status",
+      not_available: "N/A",
+      unit: "unit",
+      units: "units",
+      err_select_category: "Please select a category for item #{n}.",
+      err_select_model: "Please select a model for item #{n}.",
+      err_qty: "Quantity for item #{n} must be at least 1.",
+      ticket_failed: "Failed to create ticket. Please try again.",
+      connection_error_retry: "Connection error. Please check your internet and try again.",
+      reg_failed: "Registration failed. Please try again.",
+      server_error: "Server error. Please try again.",
+      maps_not_configured: "The map is not available right now. Please try again later.",
+      maps_loading: "The map is still loading. Please try again in a few seconds.",
+      sc_pending: "Service Center Pending"
     },
     ar: {
       // Switcher
@@ -316,9 +334,194 @@
       filter_btn: "تصفية",
       filter_options: "خيارات التصفية",
       clear_all: "مسح الكل",
-      date_range: "نطاق التاريخ"
+      date_range: "نطاق التاريخ",
+
+      // Shared dynamic messages
+      page_title_pickup: "إمبيكس — طلب استلام منتج",
+      page_title_register: "إمبيكس — تسجيل الوكلاء",
+      page_title_status: "إمبيكس — حالة التذكرة",
+      not_available: "غير متوفر",
+      unit: "وحدة",
+      units: "وحدات",
+      err_select_category: "يرجى اختيار الفئة للمنتج رقم {n}.",
+      err_select_model: "يرجى اختيار الموديل للمنتج رقم {n}.",
+      err_qty: "يجب ألا تقل الكمية للمنتج رقم {n} عن 1.",
+      ticket_failed: "تعذر إنشاء التذكرة. يرجى المحاولة مرة أخرى.",
+      connection_error_retry: "خطأ في الاتصال. يرجى التحقق من الإنترنت والمحاولة مرة أخرى.",
+      reg_failed: "تعذر إكمال التسجيل. يرجى المحاولة مرة أخرى.",
+      server_error: "خطأ في الخادم. يرجى المحاولة مرة أخرى.",
+      maps_not_configured: "الخريطة غير متاحة حالياً. يرجى المحاولة لاحقاً.",
+      maps_loading: "الخريطة قيد التحميل. يرجى المحاولة بعد بضع ثوانٍ.",
+      sc_pending: "مركز الخدمة قيد التحديد"
     }
   };
+
+  // Arabic display names for data values (regions, cities, service centers,
+  // product categories). Values sent to the backend stay in English; only the
+  // label shown to the user changes. Keys are matched case-insensitively.
+  const NAMES_AR = {
+    // Regions
+    "Riyadh Province": "منطقة الرياض",
+    "Makkah Province": "منطقة مكة المكرمة",
+    "Eastern Province": "المنطقة الشرقية",
+    "Madinah Province": "منطقة المدينة المنورة",
+    "Al-Qassim Province": "منطقة القصيم",
+    "Hail Province": "منطقة حائل",
+    "Tabuk Province": "منطقة تبوك",
+    "Northern Borders Province": "منطقة الحدود الشمالية",
+    "Jazan Province": "منطقة جازان",
+    "Najran Province": "منطقة نجران",
+    "Al-Baha Province": "منطقة الباحة",
+    "Al-Jouf Province": "منطقة الجوف",
+    "Asir Province": "منطقة عسير",
+
+    // Service centers
+    "Riyadh Service Center": "مركز خدمة الرياض",
+    "Dammam Service Center": "مركز خدمة الدمام",
+    "Madeena Service Center": "مركز خدمة المدينة المنورة",
+    "Jeddah Service Center": "مركز خدمة جدة",
+    "Darb Service Center": "مركز خدمة الدرب",
+
+    // Cities — Riyadh
+    "Riyadh": "الرياض", "Diriyah": "الدرعية", "Al-Kharj": "الخرج", "Dawadmi": "الدوادمي",
+    "Al Majma'ah": "المجمعة", "Al-Quway'iyah": "القويعية", "Wadi ad-Dawasir": "وادي الدواسر",
+    "Al Aflaj": "الأفلاج", "Al Zulfi": "الزلفي", "Shaqra": "شقراء", "Howtat Bani Tamim": "حوطة بني تميم",
+    "Afif": "عفيف", "As Sulayyil": "السليل", "Dhurma": "ضرما", "Al-Muzahmiyya": "المزاحمية",
+    "Rumaah": "رماح", "Thadiq": "ثادق", "Huraymila": "حريملاء", "Al Hariq": "الحريق", "Al-Ghat": "الغاط",
+    // Makkah
+    "Mecca": "مكة المكرمة", "Jeddah": "جدة", "Ta'if": "الطائف", "Al Qunfudhah": "القنفذة",
+    "Al Lith": "الليث", "Rabigh": "رابغ", "Al Jumum": "الجموم", "Khulais": "خليص", "Al Kamil": "الكامل",
+    "Al Khurmah": "الخرمة", "Ranyah": "رنية", "Turubah": "تربة", "Al Muwayh": "الموية", "Adham": "أضم",
+    "Maysaan": "ميسان", "Bahrah": "بحرة",
+    // Eastern
+    "Dammam": "الدمام", "Al Ahsa": "الأحساء", "Hafar Al-Batin": "حفر الباطن", "Jubail": "الجبيل",
+    "Qatif": "القطيف", "Khobar": "الخبر", "Khafji": "الخفجي", "Ras Tanura": "رأس تنورة",
+    "Abqaiq": "بقيق", "Al Nairyah": "النعيرية", "Qaryat al-Ulya": "قرية العليا", "Dhahran": "الظهران",
+    // Madinah
+    "Medina": "المدينة المنورة", "Yanbu": "ينبع", "Al-`Ula": "العلا", "Mahd adh Dhahab": "مهد الذهب",
+    "Badr": "بدر", "Khaybar": "خيبر", "Al Hinakiyah": "الحناكية",
+    // Al-Qassim
+    "Buraidah": "بريدة", "Unaizah": "عنيزة", "Ar Rass": "الرس", "Al Mithnab": "المذنب",
+    "Al Bukayriyah": "البكيرية", "Al Badائع": "البدائع", "As Nabhaniyah": "النبهانية",
+    "Uyun AlJiwa": "عيون الجواء", "Riyadh Al Khabra": "رياض الخبراء", "Ash Shimasiyah": "الشماسية",
+    // Hail
+    "Ha'il": "حائل", "Baqaa": "بقعاء", "Al Ghazalah": "الغزالة", "Al Shanan": "الشنان", "Samaheer": "سميراء",
+    // Tabuk
+    "Tabuk": "تبوك", "Al Wajh": "الوجه", "Duba": "ضباء", "Tayma": "تيماء", "Umluj": "أملج", "Haql": "حقل",
+    // Northern Borders
+    "Arar": "عرعر", "Rafha": "رفحاء", "Turaif": "طريف",
+    // Jazan
+    "Jizan": "جازان", "Sabya": "صبيا", "Abu Arish": "أبو عريش", "Samtah": "صامطة", "Al Harth": "الحرث",
+    "Damad": "ضمد", "Al Reeth": "الريث", "Baish": "بيش", "Farasan": "فرسان", "Ad Dair": "الدائر",
+    "Ahad al Masarihah": "أحد المسارحة", "Al Edabi": "العيدابي", "Al Aridhah": "العارضة", "Al Darb": "الدرب",
+    // Najran
+    "Najran": "نجران", "Sharurah": "شرورة", "Hubuna": "حبونا", "Badr Al Janoub": "بدر الجنوب",
+    "Yadamah": "يدمة", "Thar": "ثار", "Khubash": "خباش", "Al Kharkhir": "الخرخير",
+    // Al-Baha
+    "Al Baha": "الباحة", "Baljurashi": "بلجرشي", "Al Mandaq": "المندق", "Al Makhwah": "المخواة",
+    "Al Aqiq": "العقيق", "Qilwah": "قلوة", "Al Qara": "القرى",
+    // Al-Jouf
+    "Sakakah": "سكاكا", "Qurayyat": "القريات", "Dumat al-Jandal": "دومة الجندل",
+    // Asir
+    "Abha": "أبها", "Khamis Mushait": "خميس مشيط", "Bisha": "بيشة", "Al-Namas": "النماص",
+    "Mahayil": "محايل عسير", "Sarat Abidah": "سراة عبيدة", "Tathlith": "تثليث", "Rojal Alma'a": "رجال ألمع",
+    "Dhahran Al Janub": "ظهران الجنوب", "Balqarn": "بلقرن", "Bariq": "بارق", "Al Majardah": "المجاردة",
+
+    // Product categories (live catalog — unknown ones fall back to the original name)
+    "2.0 Computer Speaker": "سماعات كمبيوتر 2.0",
+    "2.1 Multimedia Speaker": "سماعات وسائط متعددة 2.1",
+    "3.1 Home Theatre": "مسرح منزلي 3.1",
+    "5.1 Home Theatre": "مسرح منزلي 5.1",
+    "Air Conditioner": "مكيف هواء",
+    "Air Cooler": "مبرد هواء",
+    "Air Fryer": "قلاية هوائية",
+    "Bread Toaster": "محمصة خبز",
+    "Ceiling Lamp": "مصباح سقف",
+    "Chopper": "مفرمة",
+    "Coffe Maker": "صانعة قهوة",
+    "Coffee Maker": "صانعة قهوة",
+    "Cookware": "أواني طهي",
+    "Deep Fryer": "قلاية زيت",
+    "Digital Video Broadcast": "جهاز استقبال رقمي",
+    "Dish Washer": "غسالة صحون",
+    "Electric Cooker": "طباخ كهربائي",
+    "Electric Iron Box": "مكواة كهربائية",
+    "Garment Steamer": "مكواة بخار للملابس",
+    "Electric Kettle": "غلاية كهربائية",
+    "Electric Oven": "فرن كهربائي",
+    "Emergency Light": "إضاءة طوارئ",
+    "Flash Light Combo": "مجموعة كشافات",
+    "Gas Stove": "موقد غاز",
+    "Grinder": "مطحنة",
+    "Heater": "دفاية",
+    "Hot Plate": "موقد كهربائي",
+    "Induction Cooker": "طباخ بالحث",
+    "Infrared Cooktop": "موقد بالأشعة تحت الحمراء",
+    "Insect Killer": "صاعق حشرات",
+    "Juicer Blender": "عصارة وخلاط",
+    "Karaoke Wireless Microphone": "ميكروفون كاريوكي لاسلكي",
+    "Kitchen Hob": "سطح طبخ مدمج",
+    "Kitchen Scale": "ميزان مطبخ",
+    "LED Lamp Flash Light Combo": "مجموعة مصباح LED وكشاف",
+    "TV": "تلفزيون",
+    "Massager Gun": "مسدس تدليك",
+    "Micro Waveoven": "فرن ميكروويف",
+    "Microwave Oven": "فرن ميكروويف",
+    "Pedestal and Table Fan": "مروحة أرضية ومكتبية",
+    "Personal Care": "العناية الشخصية",
+    "Personal Scale": "ميزان شخصي",
+    "Portable Speaker": "سماعة محمولة",
+    "Power Socket": "توصيلة كهربائية",
+    "Power Station": "محطة طاقة متنقلة",
+    "Pressure Cooker": "قدر ضغط",
+    "Radio": "راديو",
+    "Recharge Fan": "مروحة قابلة للشحن",
+    "Refrigerator": "ثلاجة",
+    "Rice Cooker": "طباخ أرز",
+    "Roti Maker": "صانعة خبز الروتي",
+    "Sandwich Maker": "صانعة سندويتشات",
+    "Stage Speaker": "سماعة مسرح",
+    "Torch Light": "كشاف يدوي",
+    "Trolley Speaker": "سماعة متنقلة بعجلات",
+    "Vaccum Flask": "ترمس",
+    "Vacuum Flask": "ترمس",
+    "Vacuum Cleaner": "مكنسة كهربائية",
+    "Washing Mechine": "غسالة ملابس",
+    "Washing Machine": "غسالة ملابس",
+    "Water Dispenser": "موزع مياه",
+    "Wireless Head phone": "سماعة رأس لاسلكية"
+  };
+
+  const normalizeName = (s) => String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
+  const NAMES_AR_INDEX = {};
+  Object.keys(NAMES_AR).forEach((k) => { NAMES_AR_INDEX[normalizeName(k)] = NAMES_AR[k]; });
+
+  // Returns the Arabic display name for a data value when Arabic is active,
+  // otherwise the original value. Unknown values are returned unchanged.
+  function translateName(value) {
+    if (value === undefined || value === null || value === "") return value;
+    if (currentLang !== "ar") return value;
+    const str = String(value);
+    const hit = NAMES_AR_INDEX[normalizeName(str)];
+    if (hit) return hit;
+    // "LED TV 32 INCH" style model names
+    const tv = /^LED TV (\d+) INCH$/i.exec(str.trim());
+    if (tv) return `تلفزيون LED ${tv[1]} بوصة`;
+    // "Category - Model" combined values
+    const dash = str.indexOf(" - ");
+    if (dash > 0) {
+      const head = NAMES_AR_INDEX[normalizeName(str.slice(0, dash))];
+      if (head) return `${head} - ${str.slice(dash + 3)}`;
+    }
+    return str;
+  }
+
+  // Translate with {placeholders}: format("err_qty", { n: 2 })
+  function format(key, vars) {
+    let out = translate(key);
+    Object.keys(vars || {}).forEach((k) => { out = out.split(`{${k}}`).join(vars[k]); });
+    return out;
+  }
 
   let currentLang = "en";
   let listeners = [];
@@ -402,7 +605,9 @@
     const textEls = target.querySelectorAll("[data-i18n]");
     textEls.forEach((el) => {
       const key = el.getAttribute("data-i18n");
-      const val = translate(key);
+      let vars = null;
+      try { vars = JSON.parse(el.getAttribute("data-i18n-vars") || "null"); } catch (e) { vars = null; }
+      const val = vars ? format(key, vars) : translate(key);
       if (val) {
         if (el.children.length === 0) {
           el.textContent = val;
@@ -434,6 +639,11 @@
       const key = el.getAttribute("data-i18n-title");
       const val = translate(key);
       if (val) el.setAttribute("title", val);
+    });
+
+    // Data values (region / city / service center / category names)
+    target.querySelectorAll("[data-i18n-value]").forEach((el) => {
+      el.textContent = translateName(el.getAttribute("data-i18n-value"));
     });
 
     // Update custom switcher buttons if rendered
@@ -616,6 +826,30 @@
       setLang: setLanguage,
       toggle: toggleLanguage,
       t: translate,
+      format: format,
+      name: translateName,
+      // Show a data value (kept in English) as a translated label that follows language switches
+      setValue: (el, raw, fallback) => {
+        if (!el) return;
+        if (raw === undefined || raw === null || raw === "") {
+          el.removeAttribute("data-i18n-value");
+          el.textContent = fallback !== undefined ? fallback : "";
+          return;
+        }
+        el.removeAttribute("data-i18n");
+        el.removeAttribute("data-i18n-vars");
+        el.setAttribute("data-i18n-value", raw);
+        el.textContent = translateName(raw);
+      },
+      // Show a message by key that follows language switches
+      setText: (el, key, vars) => {
+        if (!el) return;
+        el.removeAttribute("data-i18n-value");
+        el.setAttribute("data-i18n", key);
+        if (vars) el.setAttribute("data-i18n-vars", JSON.stringify(vars));
+        else el.removeAttribute("data-i18n-vars");
+        el.textContent = vars ? format(key, vars) : translate(key);
+      },
       apply: applyDOMTranslations,
       renderSwitcher: renderSwitcher,
       onChange: onChange,

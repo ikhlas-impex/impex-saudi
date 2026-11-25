@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>IMPEX — Product Pickup Request</title>
+<title data-i18n="page_title_pickup">IMPEX — Product Pickup Request</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -541,14 +541,9 @@ async function init() {
   if (window.IMPEX_i18n) {
     IMPEX_i18n.renderSwitcher(document.getElementById('header-lang-switcher'), { compact: true });
     IMPEX_i18n.onChange(() => {
-      // Re-number products text when language toggles
-      const rows = document.querySelectorAll('.product-row');
-      rows.forEach((row, i) => {
-        const label = row.querySelector('strong');
-        if (label) label.textContent = `${IMPEX_i18n.t('product_num')}${i + 1}`;
-        const removeBtn = row.querySelector('.btn-remove-row');
-        if (removeBtn) removeBtn.textContent = IMPEX_i18n.t('remove_product');
-      });
+      // Row labels, options and data values re-translate via data-i18n attributes.
+      const btn = document.getElementById('btn-submit');
+      if (btn && !btn.disabled) document.getElementById('btn-submit-text').textContent = IMPEX_i18n.t('confirm_btn');
     });
   }
 
@@ -556,7 +551,7 @@ async function init() {
   phone = (params.get('phone') || '').replace(/\D/g, '');
 
   if (!phone) {
-    showError(IMPEX_i18n ? IMPEX_i18n.t('error_no_phone') : 'No phone number provided. Please open this link from WhatsApp.');
+    showError('error_no_phone');
     return;
   }
 
@@ -585,9 +580,7 @@ async function init() {
 
     // Check dealer
     if (!dealerData.registered) {
-      const clickMsg = IMPEX_i18n ? IMPEX_i18n.t('click_to_register') : 'Click here to register as a dealer';
-      const noDealerMsg = IMPEX_i18n ? IMPEX_i18n.t('error_no_dealer') : 'Dealer not found for this phone number.';
-      showError(`${noDealerMsg}<br/><br/><a href="/dealer-register.html?phone=${encodeURIComponent(phone)}&lang=${IMPEX_i18n ? IMPEX_i18n.getLang() : 'en'}" style="color:var(--primary);text-decoration:underline;font-weight:600;">${clickMsg}</a>.`);
+      showError('error_no_dealer', `<br/><br/><a href="/dealer-register.html?phone=${encodeURIComponent(phone)}&lang=${IMPEX_i18n.getLang()}" style="color:var(--primary);text-decoration:underline;font-weight:600;" data-i18n="click_to_register">${IMPEX_i18n.t('click_to_register')}</a>`);
       return;
     }
 
@@ -627,8 +620,11 @@ async function init() {
     // Populate dealer info panel
     document.getElementById('info-dealerid').textContent = dealer.dealerid;
     document.getElementById('info-name').textContent     = dealer.dealername;
-    document.getElementById('info-region').textContent   = dealer.region + (dealer.subregion ? ' · ' + dealer.subregion : '');
-    document.getElementById('info-sc').textContent       = dealer.servicecenter || 'N/A';
+    const regionEl = document.getElementById('info-region');
+    regionEl.innerHTML = '<span class="v-region"></span>' + (dealer.subregion ? ' · <span class="v-subregion"></span>' : '');
+    IMPEX_i18n.setValue(regionEl.querySelector('.v-region'), dealer.region, '—');
+    if (dealer.subregion) IMPEX_i18n.setValue(regionEl.querySelector('.v-subregion'), dealer.subregion);
+    setServiceCenter(document.getElementById('info-sc'), dealer.servicecenter);
 
     // Populate category dropdown from LIVE catalog
     document.getElementById('product-rows-container').innerHTML = '';
@@ -637,7 +633,7 @@ async function init() {
     showScreen('screen-form');
 
   } catch(e) {
-    showError(IMPEX_i18n ? IMPEX_i18n.t('error_connection') : 'Could not connect to the server. Please check your connection and try again.');
+    showError('error_connection');
   }
 }
 
@@ -651,29 +647,29 @@ function addProductRow() {
   const index = nextRowIndex++;
   activeRowIds.push(index);
 
-  const t = IMPEX_i18n ? IMPEX_i18n.t : (k, f) => f;
+  const t = IMPEX_i18n.t;
 
   const container = document.getElementById('product-rows-container');
   const rowHtml = `
     <div class="product-row" id="product-row-${index}" style="position: relative; border: 1.5px solid var(--gray-200); border-radius: 8px; padding: 16px; margin-bottom: 16px; background: var(--gray-50);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <strong style="font-size: 12px; color: var(--green); text-transform: uppercase; font-weight: 600;">${t('product_num')}#${activeRowIds.length}</strong>
-        <button type="button" class="btn-remove-row" onclick="removeProductRow(${index})" style="background: none; border: none; color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">${t('remove_product')}</button>
+        <strong style="font-size: 12px; color: var(--green); text-transform: uppercase; font-weight: 600;"><span data-i18n="product_num">${t('product_num')}</span><span class="row-num">${activeRowIds.length}</span></strong>
+        <button type="button" class="btn-remove-row" onclick="removeProductRow(${index})" style="background: none; border: none; color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;" data-i18n="remove_product">${t('remove_product')}</button>
       </div>
       <div class="field" style="margin-bottom: 12px;">
-        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;">${t('category')} <span class="req">*</span></label>
+        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;" data-i18n="category">${t('category')} <span class="req">*</span></label>
         <select class="sel-category-row" onchange="onCategoryChange(${index}, this.value)" style="padding: 10px 12px; font-size: 14px;">
-          <option value="">${t('choose_category')}</option>
+          <option value="" data-i18n="choose_category">${t('choose_category')}</option>
         </select>
       </div>
       <div class="field" style="margin-bottom: 12px;">
-        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;">${t('model')} <span class="req">*</span></label>
+        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;" data-i18n="model">${t('model')} <span class="req">*</span></label>
         <select class="sel-model-row" disabled onchange="validateRows()" style="padding: 10px 12px; font-size: 14px;">
-          <option value="">${t('select_cat_first')}</option>
+          <option value="" data-i18n="select_cat_first">${t('select_cat_first')}</option>
         </select>
       </div>
       <div class="field" style="margin-bottom: 0;">
-        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;">${t('quantity')} <span class="req">*</span></label>
+        <label class="field-label" style="font-size: 12px; margin-bottom: 4px;" data-i18n="quantity">${t('quantity')} <span class="req">*</span></label>
         <input type="number" class="inp-qty-row" min="1" max="99" value="1" oninput="validateRows()" style="padding: 10px 12px; font-size: 14px;">
       </div>
     </div>
@@ -686,17 +682,20 @@ function addProductRow() {
   // Populate categories in the new row
   const rowEl = document.getElementById(`product-row-${index}`);
   const catSel = rowEl.querySelector('.sel-category-row');
-  Object.keys(CATALOG).sort().forEach(cat => {
-    const opt = document.createElement('option');
-    opt.value = cat;
-    opt.textContent = cat;
-    catSel.appendChild(opt);
-  });
+  const locale = IMPEX_i18n.getLang() === 'ar' ? 'ar' : 'en';
+  Object.keys(CATALOG)
+    .sort((a, b) => String(IMPEX_i18n.name(a)).localeCompare(String(IMPEX_i18n.name(b)), locale))
+    .forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      IMPEX_i18n.setValue(opt, cat);
+      catSel.appendChild(opt);
+    });
 
   if (Object.keys(CATALOG).length === 0) {
     const opt = document.createElement('option');
     opt.value = '';
-    opt.textContent = t('unable_load_cat');
+    IMPEX_i18n.setText(opt, 'unable_load_cat');
     catSel.appendChild(opt);
   }
 
@@ -714,13 +713,9 @@ function removeProductRow(index) {
 
   activeRowIds = activeRowIds.filter(id => id !== index);
 
-  const t = IMPEX_i18n ? IMPEX_i18n.t : (k, f) => f;
-
   // Re-number displays
-  const rows = document.querySelectorAll('.product-row');
-  rows.forEach((row, i) => {
-    const label = row.querySelector('strong');
-    if (label) label.textContent = `${t('product_num')}#${i + 1}`;
+  document.querySelectorAll('.product-row .row-num').forEach((el, i) => {
+    el.textContent = i + 1;
   });
 
   updateRowsUI();
@@ -731,23 +726,23 @@ function onCategoryChange(index, cat) {
   const rowEl = document.getElementById(`product-row-${index}`);
   if (!rowEl) return;
 
-  const t = IMPEX_i18n ? IMPEX_i18n.t : (k, f) => f;
+  const t = IMPEX_i18n.t;
   const modSel = rowEl.querySelector('.sel-model-row');
   modSel.innerHTML = '';
 
   if (!cat) {
-    modSel.innerHTML = `<option value="">${t('select_cat_first')}</option>`;
+    modSel.innerHTML = `<option value="" data-i18n="select_cat_first">${t('select_cat_first')}</option>`;
     modSel.disabled = true;
     validateRows();
     return;
   }
 
   const models = CATALOG[cat] || [];
-  modSel.innerHTML = `<option value="">${t('choose_model')}</option>`;
+  modSel.innerHTML = `<option value="" data-i18n="choose_model">${t('choose_model')}</option>`;
   models.forEach(m => {
     const opt = document.createElement('option');
     opt.value = m;
-    opt.textContent = m;
+    IMPEX_i18n.setValue(opt, m);
     modSel.appendChild(opt);
   });
   modSel.disabled = false;
@@ -814,9 +809,9 @@ function goConfirm() {
     const mod = row.querySelector('.sel-model-row').value;
     const qty = parseInt(row.querySelector('.inp-qty-row').value) || 0;
 
-    if (!cat) { showAlert(errEl, `Please select a category for item #${i + 1}.`, 'error'); hasError = true; }
-    if (!mod && !hasError) { showAlert(errEl, `Please select a model for item #${i + 1}.`, 'error'); hasError = true; }
-    if (qty < 1 && !hasError) { showAlert(errEl, `Quantity for item #${i + 1} must be at least 1.`, 'error'); hasError = true; }
+    if (!hasError && !cat) { showAlert(errEl, 'err_select_category', 'error', { n: i + 1 }); hasError = true; }
+    if (!hasError && !mod) { showAlert(errEl, 'err_select_model', 'error', { n: i + 1 }); hasError = true; }
+    if (!hasError && qty < 1) { showAlert(errEl, 'err_qty', 'error', { n: i + 1 }); hasError = true; }
 
     items.push({ cat, mod, qty });
   });
@@ -824,7 +819,7 @@ function goConfirm() {
   if (hasError) return;
 
   document.getElementById('conf-dealer').textContent = dealer.dealername;
-  document.getElementById('conf-sc').textContent     = dealer.servicecenter || 'N/A';
+  setServiceCenter(document.getElementById('conf-sc'), dealer.servicecenter);
 
   const listContainer = document.getElementById('conf-items-list');
   listContainer.innerHTML = '';
@@ -838,9 +833,11 @@ function goConfirm() {
     itemRow.style.borderBottom = i < items.length - 1 ? '1px dashed var(--border)' : 'none';
     
     itemRow.innerHTML = `
-      <span style="color: var(--gray-600);">${i + 1}. ${item.cat} — <strong>${item.mod}</strong></span>
-      <span style="font-weight: 600; color: var(--gray-800);">×${item.qty}</span>
+      <span style="color: var(--gray-600);">${i + 1}. <span class="v-cat"></span> — <strong class="v-mod"></strong></span>
+      <span style="font-weight: 600; color: var(--gray-800);" dir="ltr">×${item.qty}</span>
     `;
+    IMPEX_i18n.setValue(itemRow.querySelector('.v-cat'), item.cat);
+    IMPEX_i18n.setValue(itemRow.querySelector('.v-mod'), item.mod);
     listContainer.appendChild(itemRow);
   });
 
@@ -857,7 +854,7 @@ async function submitPickup() {
   errEl.className = 'alert'; errEl.style.display = 'none';
 
   btn.disabled = true;
-  btnText.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0;border-top-color:white;"></div> Creating ticket…';
+  btnText.innerHTML = `<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0;border-top-color:white;"></div> ${IMPEX_i18n.t('creating_ticket')}`;
 
   const rows = document.querySelectorAll('.product-row');
   const items = [];
@@ -875,27 +872,30 @@ async function submitPickup() {
       body: JSON.stringify({
         phone: phone,
         dealerid: dealer.dealerid,
-        items: items
+        items: items,
+        lang: IMPEX_i18n.getLang()
       })
     });
     const data = await res.json();
 
     if (!data.success) {
-      const errorMsg = data.message ? `${data.error}: ${data.message}` : (data.error || 'Failed to create ticket. Please try again.');
-      showAlert(errEl, errorMsg, 'error');
+      console.error('Create ticket error:', data.error, data.message);
+      showAlert(errEl, 'ticket_failed', 'error');
       btn.disabled = false;
-      btnText.textContent = 'Confirm & Create Ticket';
+      btnText.textContent = IMPEX_i18n.t('confirm_btn');
       return;
     }
 
     // Show success
     const tickets = data.tickets || [];
     document.getElementById('suc-date').textContent = data.date || '—';
-    document.getElementById('suc-sc').textContent   = data.servicecenter || dealer.servicecenter || '—';
+    IMPEX_i18n.setValue(document.getElementById('suc-sc'), data.servicecenter || dealer.servicecenter, '—');
 
     if (tickets.length === 1) {
       // Single ticket layout
-      document.getElementById('success-ticketno').textContent = tickets[0].ticketno || '—';
+      const ticketEl = document.getElementById('success-ticketno');
+      ticketEl.removeAttribute('data-i18n');
+      ticketEl.textContent = tickets[0].ticketno || '—';
       document.getElementById('suc-row-category').style.display = 'flex';
       document.getElementById('suc-row-model').style.display = 'flex';
       document.getElementById('suc-row-qty').style.display = 'flex';
@@ -903,12 +903,14 @@ async function submitPickup() {
 
       // Parse category and product model
       const firstItem = items[0];
-      document.getElementById('suc-category').textContent = firstItem.category;
-      document.getElementById('suc-model').textContent    = firstItem.product;
-      document.getElementById('suc-qty').textContent      = firstItem.quantity + ' unit' + (firstItem.quantity > 1 ? 's' : '');
+      IMPEX_i18n.setValue(document.getElementById('suc-category'), firstItem.category);
+      IMPEX_i18n.setValue(document.getElementById('suc-model'), firstItem.product);
+      const qtyEl = document.getElementById('suc-qty');
+      qtyEl.innerHTML = `${firstItem.quantity} <span></span>`;
+      IMPEX_i18n.setText(qtyEl.querySelector('span'), firstItem.quantity > 1 ? 'units' : 'unit');
     } else {
       // Multi ticket layout
-      document.getElementById('success-ticketno').textContent = 'MULTIPLE TICKETS';
+      IMPEX_i18n.setText(document.getElementById('success-ticketno'), 'multiple_tickets');
       document.getElementById('suc-row-category').style.display = 'none';
       document.getElementById('suc-row-model').style.display = 'none';
       document.getElementById('suc-row-qty').style.display = 'none';
@@ -924,19 +926,20 @@ async function submitPickup() {
         itemRow.style.padding = '4px 0';
         itemRow.style.borderBottom = i < tickets.length - 1 ? '1px dashed var(--gray-200)' : 'none';
         
-        itemRow.innerHTML = `
-          <span style="color: var(--gray-600); font-weight: 500;">🎫 <strong>${t.ticketno}</strong> — ${t.product}</span>
-          <span style="font-weight: 600; color: var(--gray-800);">×${t.quantity}</span>
-        `;
+      itemRow.innerHTML = `
+        <span style="color: var(--gray-600); font-weight: 500;">🎫 <strong dir="ltr">${t.ticketno}</strong> — <span class="v-prod"></span></span>
+        <span style="font-weight: 600; color: var(--gray-800);" dir="ltr">×${t.quantity}</span>
+      `;
+      IMPEX_i18n.setValue(itemRow.querySelector('.v-prod'), t.product);
         multiList.appendChild(itemRow);
       });
     }
 
     showScreen('screen-success');
   } catch(e) {
-    showAlert(errEl, 'Connection error. Please check your internet and try again.', 'error');
+    showAlert(errEl, 'connection_error_retry', 'error');
     btn.disabled = false;
-    btnText.textContent = 'Confirm & Create Ticket';
+    btnText.textContent = IMPEX_i18n.t('confirm_btn');
   }
 }
 
@@ -947,15 +950,29 @@ function showScreen(id) {
   window.scrollTo(0, 0);
 }
 
-function showError(msg) {
-  document.getElementById('error-msg').innerHTML = msg;
+// key: an i18n key; extraHtml: optional trusted markup appended after the message
+function showError(key, extraHtml) {
+  const el = document.getElementById('error-msg');
+  el.setAttribute('data-i18n', key);
+  el.innerHTML = '';
+  el.appendChild(document.createTextNode(IMPEX_i18n.t(key)));
+  if (extraHtml) el.insertAdjacentHTML('beforeend', extraHtml);
   showScreen('screen-error');
 }
 
-function showAlert(el, msg, type) {
-  el.textContent  = msg;
-  el.className    = 'alert ' + type;
+// key: an i18n key; vars: optional {placeholder: value}
+function showAlert(el, key, type, vars) {
+  IMPEX_i18n.setText(el, key, vars);
+  el.className = 'alert ' + type;
   el.style.display = 'flex';
+}
+
+function setServiceCenter(el, sc) {
+  if (sc) {
+    IMPEX_i18n.setValue(el, sc);
+  } else {
+    IMPEX_i18n.setText(el, 'not_available');
+  }
 }
 
 // ── Start ─────────────────────────────────────────────────────────────────
